@@ -5,7 +5,7 @@
       <SelectionState runConfigName="app">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
-      <SelectionState runConfigName="ManageSystemPreview">
+      <SelectionState runConfigName="AddSystemContentPreview">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
       <SelectionState runConfigName="BluetoothDevices">
@@ -15,6 +15,7 @@
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
       <SelectionState runConfigName="BluetoothDevicesPreview (1)">
+      <SelectionState runConfigName="AddSystemContentPreview">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
       <SelectionState runConfigName="BluetoothDevicesPreview (2)">
@@ -24,6 +25,7 @@
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
       <SelectionState runConfigName="BluetoothDevices (1)">
+      <SelectionState runConfigName="SystemsListPreview">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
     </selectionStates>

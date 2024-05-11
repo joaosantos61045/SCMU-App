@@ -14,7 +14,7 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.SCMUApp"
+        android:theme="@style/Theme.MySplashScreen"
         tools:targetApi="31">
         <activity
             android:name=".EditSystem"
@@ -32,15 +32,15 @@
             android:label="@string/title_activity_main2"
             android:theme="@style/Theme.SCMUApp" />
         <activity
-            android:name=".MainScreen"
+            android:name=".BluetoothDevices"
             android:exported="false"
             android:label="@string/title_activity_main2"
             android:theme="@style/Theme.SCMUApp" />
         <activity
-            android:name=".BluetoothDevices"
+            android:name=".MainScreen"
             android:exported="true"
             android:label="@string/app_name"
-            android:theme="@style/Theme.SCMUApp">
+            android:theme="@style/Theme.MySplashScreen">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
