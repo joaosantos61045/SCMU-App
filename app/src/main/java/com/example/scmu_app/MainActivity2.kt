@@ -1,22 +1,17 @@
 package com.example.scmu_app
 
 import android.annotation.SuppressLint
-import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.widget.ScrollView
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.gestures.ScrollableState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.AbsoluteRoundedCornerShape
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -24,7 +19,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -35,6 +29,7 @@ import com.example.scmu_app.ui.theme.SCMUAppTheme
 
 
 class MainActivity2 : ComponentActivity() {
+
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -47,17 +42,17 @@ class MainActivity2 : ComponentActivity() {
                 ) {
 
 
-                        AddSystemContent()
+                    ManageSystemContent()
 
                 }
             }
         }
-    }
+    }//onResume
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddSystemContent() {
+fun ManageSystemContent() {
     val context = LocalContext.current
     val timeIntervals = listOf(
         "00:00", "00:30",
@@ -88,13 +83,15 @@ fun AddSystemContent() {
     val timeDurations = listOf(
         "5", "10", "15", "20", "25", "30"
     )
-    val mintGreen=Color(0xffbff4d2)
-    val darkGreen=Color(0xFF306044)
-    val bgGreen=Color(0xFF8CBF9F)
-    val swampGreen=Color(0xFF5D8E70)
+    val mintGreen = Color(0xffbff4d2)
+    val darkGreen = Color(0xFF306044)
+    val bgGreen = Color(0xFF8CBF9F)
+    val swampGreen = Color(0xFF5D8E70)
+    val showDialog = remember { mutableStateOf(false) }
     Column(
-        modifier = Modifier.verticalScroll(rememberScrollState())
-            .background(mintGreen )
+        modifier = Modifier
+            .verticalScroll(rememberScrollState())
+            .background(mintGreen)
 
     ) {
         TopAppBar(
@@ -119,19 +116,27 @@ fun AddSystemContent() {
                 .height(50.dp)
         )
 
-        Subheader("General",darkGreen)
-        var text =TextBox("WiFi")
+        Subheader("General", darkGreen)
+        var text = TextBox("WiFi")
         TextBox("House Name")
 
-        Subheader("Schedule",darkGreen)
-        Dropdown("Duration (in Minutes)", timeDurations,"Duration") // Replace with appropriate duration options
-        Dropdown("Hour of System Start", timeIntervals,"Hour") // Replace with appropriate hour options
-        Subheader("Rotation",darkGreen)
+        Subheader("Schedule", darkGreen)
+        Dropdown(
+            "Duration (in Minutes)",
+            timeDurations,
+            "Duration"
+        ) // Replace with appropriate duration options
+        Dropdown(
+            "Hour of System Start",
+            timeIntervals,
+            "Hour"
+        ) // Replace with appropriate hour options
+        Subheader("Rotation", darkGreen)
         // Add rotation content here
         DaySelectionRow()
-        Subheader("Notifications",darkGreen)
+        Subheader("Notifications", darkGreen)
         ToggleButton("Smart Watering")
-        Subheader("Dangerous",darkGreen)
+        Subheader("Dangerous", darkGreen)
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(16.dp)
@@ -142,19 +147,61 @@ fun AddSystemContent() {
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.weight(1f)
             )
-            Button(onClick = {  },
+            Button(
+                onClick = { showDialog.value = true },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.Red
-                )) {
-                Text(text = "Remove System",
-                    color = Color.White)
+                )
+            ) {
+                Text(
+                    text = "Remove System",
+                    color = Color.White
+                )
 
             }
         }
 
-        Button(onClick = {  }) {
+        Button(onClick = { }) {
             Text(text = "Add System")
 
+        }
+        if (showDialog.value) {
+            AlertDialog(
+                onDismissRequest = { showDialog.value = false },
+                title = { Text("Remove System") },
+                text = {
+                    Column {
+                        Text(
+                            modifier = Modifier
+                                .padding(horizontal = 16.dp, vertical = 6.dp)
+                                .fillMaxWidth(),
+                            text = "Are you sure you want to remove the system?"
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                    }
+                },
+                dismissButton = {
+                    Button(
+
+                        onClick = { showDialog.value = false }) {
+                        Text("Cancel")
+                    }
+                },
+                confirmButton = {
+                    Button(colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Red
+                    ),
+                        onClick = {
+
+                            showDialog.value = false
+                        }) {
+
+                        Text("Remove")
+                    }
+                },
+
+                )
         }
 
 
@@ -180,6 +227,7 @@ fun ToggleButton(text: String) {
         )
     }
 }
+
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun DaySelectionRow() {
@@ -193,7 +241,7 @@ fun DaySelectionRow() {
         for (index in daysOfWeek.indices) {
             DayButton(
                 day = daysOfWeek[index],
-               // isSelected = index in selectedIndices,
+                // isSelected = index in selectedIndices,
                 onToggle = { toggleDaySelection(index, selectedIndices) }
             )
         }
@@ -220,9 +268,11 @@ fun DayButton(
     ) {
         Text(
             modifier = Modifier.padding(1.dp),
-            text = day)
+            text = day
+        )
     }
 }
+
 private fun toggleDaySelection(index: Int, selectedIndices: MutableList<Int>) {
     if (index in selectedIndices) {
         selectedIndices.remove(index)
@@ -230,20 +280,24 @@ private fun toggleDaySelection(index: Int, selectedIndices: MutableList<Int>) {
         selectedIndices.add(index)
     }
 }
+
 @Composable
-fun Subheader(text: String,color: Color) {
+fun Subheader(text: String, color: Color) {
     Box(
-        modifier = Modifier.padding( top = 15.dp, start = 0.dp, end = 16.dp)
-            .background(color, shape =AbsoluteRoundedCornerShape(0.dp,15.dp,15.dp,0.dp) ).width(200.dp)
-    ){
+        modifier = Modifier
+            .padding(top = 15.dp, start = 0.dp, end = 16.dp)
+            .background(color, shape = AbsoluteRoundedCornerShape(0.dp, 15.dp, 15.dp, 0.dp))
+            .width(200.dp)
+    ) {
         Text(
-        text = text,
-        style = MaterialTheme.typography.headlineMedium,
-        modifier = Modifier.padding( top = 0.dp, start = 15.dp, end = 16.dp),
+            text = text,
+            style = MaterialTheme.typography.headlineMedium,
+            modifier = Modifier.padding(top = 0.dp, start = 15.dp, end = 16.dp),
             color = Color.White,
             fontSize = 20.sp
 
-    )}
+        )
+    }
 
 }
 
@@ -272,7 +326,7 @@ fun Dropdown(label: String, options: List<String>, initialValue: String) {
         modifier = Modifier
             .wrapContentSize(Alignment.TopEnd)
     ) {
-       ElevatedButton(
+        ElevatedButton(
 
             onClick = { expanded = true }) {
             Text(
@@ -290,7 +344,7 @@ fun Dropdown(label: String, options: List<String>, initialValue: String) {
         ) {
             options.forEach { option ->
                 DropdownMenuItem(
-                    text = {Text(option) },
+                    text = { Text(option) },
                     onClick = {
                         selectedOption = option
                         expanded = false
@@ -300,6 +354,7 @@ fun Dropdown(label: String, options: List<String>, initialValue: String) {
         }
     }
 }
+
 @Composable
 fun Subsubheader(text: String) {
     Text(
@@ -313,6 +368,6 @@ fun Subsubheader(text: String) {
 @Composable
 fun AddSystemContentPreview() {
     SCMUAppTheme {
-        AddSystemContent()
+        ManageSystemContent()
     }
 }

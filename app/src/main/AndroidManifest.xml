@@ -16,6 +16,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.SCMUApp"
         tools:targetApi="31">
+
         <activity
             android:name=".MainActivity2"
             android:exported="false"

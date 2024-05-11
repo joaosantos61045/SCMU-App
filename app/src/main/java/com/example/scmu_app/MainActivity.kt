@@ -4,7 +4,6 @@ package com.example.scmu_app
 import android.annotation.SuppressLint
 import android.content.Intent
 
-import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 
 import android.os.Bundle
@@ -16,6 +15,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -26,12 +26,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat.startActivity
 
 import com.example.scmu_app.ui.theme.SCMUAppTheme
 
 class MainActivity : ComponentActivity() {
 
+    var systems : MutableList<String> = mutableListOf()
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,7 +39,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             SCMUAppTheme {
                 Scaffold {
-                    SystemsList()
+                    SystemsList(systems)
                 }
             }
         }
@@ -51,10 +51,11 @@ class MainActivity : ComponentActivity() {
 
 
 @Composable
-fun SystemsList() {
+fun SystemsList(systems: MutableList<String>) {
 
-    var count =0
-    var systems by remember { mutableStateOf<List<String>>(listOf()) }
+   // var count =cout
+  //  var systems by remember { mutableStateOf<List<String>>(listOf()) }
+
     val showDialog = remember { mutableStateOf(false) }
 
 
@@ -117,8 +118,8 @@ fun SystemsList() {
                 },
                  confirmButton = {
                     Button(onClick = {
-                        count++
-                        systems = systems + " System $count"
+
+                        systems.add(" System ${systems.size+1}")
                         showDialog.value = false}) {
 
                         Text("Add System")
@@ -161,11 +162,11 @@ fun SystemItem(name: String) {
         )
     }
 }
-
+/*
 @Preview(showBackground = true)
 @Composable
 fun SystemsListPreview() {
     SCMUAppTheme {
-        SystemsList()
+        SystemsList(systems)
     }
-}
+}*/
