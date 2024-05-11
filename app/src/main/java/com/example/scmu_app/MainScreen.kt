@@ -24,12 +24,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
 import com.example.scmu_app.ui.theme.SCMUAppTheme
 
-class MainActivity : ComponentActivity() {
+class MainScreen : ComponentActivity() {
 
     var systems : MutableList<String> = mutableListOf()
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -52,7 +51,7 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun SystemsList(systems: MutableList<String>) {
-
+    val context = LocalContext.current
    // var count =cout
   //  var systems by remember { mutableStateOf<List<String>>(listOf()) }
 
@@ -118,7 +117,9 @@ fun SystemsList(systems: MutableList<String>) {
                 },
                  confirmButton = {
                     Button(onClick = {
+                        val intent = Intent(context, AddSystem::class.java)
 
+                        context.startActivity(intent)
                         systems.add(" System ${systems.size+1}")
                         showDialog.value = false}) {
 
@@ -151,7 +152,7 @@ fun SystemItem(name: String) {
             .padding(8.dp)
             .clickable {
                 // Navigate to detail screen when clicked
-                val intent = Intent(context, MainActivity2::class.java)
+                val intent = Intent(context, SystemStatus::class.java)
 
                 context.startActivity(intent)
             }

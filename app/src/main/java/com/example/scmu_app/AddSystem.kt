@@ -28,7 +28,7 @@ import androidx.compose.ui.unit.sp
 import com.example.scmu_app.ui.theme.SCMUAppTheme
 
 
-class MainActivity2 : ComponentActivity() {
+class AddSystem : ComponentActivity() {
 
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     @OptIn(ExperimentalMaterial3Api::class)
@@ -42,7 +42,7 @@ class MainActivity2 : ComponentActivity() {
                 ) {
 
 
-                    ManageSystemContent()
+                    ManageSystemContent(false)
 
                 }
             }
@@ -52,7 +52,7 @@ class MainActivity2 : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ManageSystemContent() {
+fun ManageSystemContent(canDelete: Boolean) {
     val context = LocalContext.current
     val timeIntervals = listOf(
         "00:00", "00:30",
@@ -96,10 +96,10 @@ fun ManageSystemContent() {
     ) {
         TopAppBar(
 
-            title = { Text("Add System") },
+            title = { Text(" System") },
             navigationIcon = {
                 IconButton(onClick = {
-                    val intent = Intent(context, MainActivity::class.java)
+                    val intent = Intent(context, MainScreen::class.java)
                     context.startActivity(intent)
                 }) {
                     Icon(Icons.Filled.ArrowBack, contentDescription = "Go back")
@@ -136,35 +136,46 @@ fun ManageSystemContent() {
         DaySelectionRow()
         Subheader("Notifications", darkGreen)
         ToggleButton("Smart Watering")
-        Subheader("Dangerous", darkGreen)
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Text(
-                text = "Remove System",
-                color = Color.Red,
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.weight(1f)
-            )
-            Button(
-                onClick = { showDialog.value = true },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Red
-                )
+        if(canDelete) {
+            Subheader("Dangerous", darkGreen)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(16.dp)
             ) {
                 Text(
                     text = "Remove System",
-                    color = Color.White
+                    color = Color.Red,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.weight(1f)
                 )
+                Button(
+                    onClick = { showDialog.value = true },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Red
+                    )
+                ) {
+                    Text(
+                        text = "Remove System",
+                        color = Color.White
+                    )
+
+                }
+            }
+
+
+        }else{
+            Button(onClick = {
+                val intent = Intent(context, EditSystem::class.java)
+
+                context.startActivity(intent)
+            }) {
+                Text(text = "Add System")
 
             }
-        }
-
-        Button(onClick = { }) {
-            Text(text = "Add System")
 
         }
+
+
         if (showDialog.value) {
             AlertDialog(
                 onDismissRequest = { showDialog.value = false },
@@ -368,6 +379,6 @@ fun Subsubheader(text: String) {
 @Composable
 fun AddSystemContentPreview() {
     SCMUAppTheme {
-        ManageSystemContent()
+        ManageSystemContent(false)
     }
 }

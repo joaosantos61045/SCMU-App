@@ -18,6 +18,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -53,13 +55,13 @@ class SystemStatus : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SystemStatusContent() {
-    data class HistoryEntry(val day: String, val time: String, val duration: String)
+
 
     val history = listOf(
-        HistoryEntry("Mon", "9:00 AM", "30 minutes"),
-        HistoryEntry("Tue", "10:30 AM", "45 minutes"),
-        HistoryEntry("Wed", "2:15 PM", "1 hour"),
-        HistoryEntry("Thu", "4:00 PM", "20 minutes"),
+        listOf(" Mon", "9:00 AM", "30 minutes"),
+        listOf("Tue", "10:30 AM", "45 minutes"),
+        listOf("Wed", "2:15 PM", "1 hour"),
+        listOf("Thu", "4:00 PM", "20 minutes"),
         // Add more entries as needed
     )
     val context = LocalContext.current
@@ -79,7 +81,7 @@ fun SystemStatusContent() {
             title = { Text("My House") },
             navigationIcon = {
                 IconButton(onClick = {
-                    val intent = Intent(context, MainActivity::class.java)
+                    val intent = Intent(context, MainScreen::class.java)
                     context.startActivity(intent)
                 }) {
                     Icon(Icons.Filled.ArrowBack, contentDescription = "Go back")
@@ -91,22 +93,37 @@ fun SystemStatusContent() {
 
 
         Subheader("Information", darkGreen)
+        IconButton(
+            onClick = { val intent = Intent(context, EditSystem::class.java)
 
+                context.startActivity(intent)},
+            modifier = Modifier.size(30.dp)
+
+        ) {
+            Icon(
+                imageVector = Icons.Default.Settings,
+                contentDescription = "Close",
+                modifier = Modifier.background(darkGreen)
+
+
+            )
+        }
+        StatusItem(status = "Waiting", event ="1 hour" )
 
         Subheader("History", darkGreen)
-       LazyColumn {
 
-            items(history) { history ->
-               // HistoryItem(history.day, history.time, history.duration)
-                println(history)
-            }
+           for (item in history) {
+               HistoryItem(day = item[0], time = item[1], duration = item[2])
+
+           }
+
         }
 
 
 
 
     }
-}
+
 
 @Composable
 fun HistoryItem(day: String, time: String, duration: String) {
@@ -116,26 +133,105 @@ fun HistoryItem(day: String, time: String, duration: String) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp)
-            .clickable {
-                // Navigate to detail screen when clicked
-                val intent = Intent(context, MainActivity2::class.java)
 
-                context.startActivity(intent)
-            }
     ) {
-        Text(
-            text = day,
+        Column(
             modifier = Modifier.padding(16.dp)
-        )
-        Text(
-            text = time,
-            modifier = Modifier.padding(16.dp)
-        )
-        Text(
-                text = duration,
-        modifier = Modifier.padding(16.dp)
-        )
+        ) {
+            Text(
+                text = "Day: $day",
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+            Text(
+                text = "Time: $time",
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+            Text(
+                text = "Duration: $duration",
+            )
+        }
+    }
+}
 
+@Composable
+fun StatusItem(status: String, event: String) {
+    val darkGreen = Color(0xFF306044)
+    val context = LocalContext.current
+    val showDialog = remember { mutableStateOf(false) }
+    Surface(
+        color = Color(0xFF98FB98),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(
+                    text = "Status: $status",
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                Text(
+                    text = "Next event in: $event",
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+            }
+            IconButton(
+                onClick = { showDialog.value = true },
+                modifier = Modifier.size(24.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Close",
+                    modifier = Modifier.background(darkGreen)
+
+
+                )
+            }
+        }
+        if (showDialog.value) {
+            AlertDialog(
+                onDismissRequest = { showDialog.value = false },
+                title = { Text("Cancel Event") },
+                text = {
+                    Column {
+                        Text(
+                            modifier = Modifier
+                                .padding(horizontal = 16.dp, vertical = 6.dp)
+                                .fillMaxWidth(),
+                            text = "Are you sure you want to cancel the current event?"
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                    }
+                },
+                dismissButton = {
+                    Button(
+
+                        onClick = { showDialog.value = false }) {
+                        Text("Back")
+                    }
+                },
+                confirmButton = {
+                    Button(colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Red
+                    ),
+                        onClick = {
+
+                            showDialog.value = false
+                        }) {
+
+                        Text("Cancel")
+                    }
+                },
+
+                )
+        }
     }
 }
 
