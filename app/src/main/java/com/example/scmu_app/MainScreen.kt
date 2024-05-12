@@ -107,12 +107,14 @@ fun SystemsList(contextResolver: ContentResolver) {
                     ) {
                         Spacer(modifier = Modifier.height(20.dp))
                         LazyColumn(
-                            userScrollEnabled = true
+                            userScrollEnabled = true,
+                            modifier = Modifier.padding(bottom = 65.dp)
                         ) {
                             items(user.value.boards) { system ->
                                 SystemItem(name = system)
                             }
                         }
+
                     }
                 }
             )
