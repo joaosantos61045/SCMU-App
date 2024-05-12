@@ -2,12 +2,12 @@ package com.example.scmu_app
 
 
 import android.annotation.SuppressLint
+import android.content.ContentResolver
 import android.content.Intent
 
 import androidx.compose.runtime.Composable
 
 import android.os.Bundle
-import android.widget.ProgressBar
 
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -33,9 +33,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import com.example.scmu_app.objects.User
 
 import com.example.scmu_app.ui.theme.SCMUAppTheme
 import com.example.scmu_app.ui.theme.bgGreen
+import com.example.scmu_app.ui.theme.createDefaultScaffold
 import com.example.scmu_app.ui.theme.createTile
 import com.example.scmu_app.ui.theme.darkGreen
 import com.example.scmu_app.ui.theme.mintGreen
@@ -44,58 +46,50 @@ import com.example.scmu_app.ui.theme.titleMedium
 
 class MainScreen : ComponentActivity() {
 
-    var systems: MutableList<String> = mutableListOf()
-
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         installSplashScreen()
+
+
         enableEdgeToEdge()
         setContent {
             SCMUAppTheme {
-                Scaffold(
-                    bottomBar = {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(48.dp)
-                                .background(darkGreen),
-                        )
-                    }
-                ) {
-                    SystemsList(systems)
+                createDefaultScaffold {
+                    SystemsList(this.contentResolver)
                 }
             }
         }
-
     }
-
-
 }
 
-
 @Composable
-fun SystemsList(systems: MutableList<String>) {
+fun SystemsList(contextResolver: ContentResolver) {
     val context = LocalContext.current
-    // var count =cout
-    //  var systems by remember { mutableStateOf<List<String>>(listOf()) }
+
+    //Fetch user from the database
+    val user = remember { mutableStateOf(User("", mutableListOf())) }
+    fetchUser(contextResolver,
+        onFailure = {},
+        onSuccess = {user.value = it}
+    )
 
     val showDialog = remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(com.example.scmu_app.ui.theme.mintGreen)
+            .background(mintGreen)
     ) {
-        // Image at the top
+
         Image(
-            painter = painterResource(id = R.drawable.image), // Replace with your image resource
+            painter = painterResource(id = R.drawable.image),
             contentDescription = "",
             modifier = Modifier
                 .align(Alignment.CenterHorizontally)
                 .padding(top = 25.dp)
-                .height(100.dp)
+                .height(90.dp)
         )
 
 
@@ -115,15 +109,12 @@ fun SystemsList(systems: MutableList<String>) {
                         LazyColumn(
                             userScrollEnabled = true
                         ) {
-                            items(systems) { system ->
+                            items(user.value.boards) { system ->
                                 SystemItem(name = system)
                             }
                         }
                     }
-
-
                 }
-
             )
 
             Button(
@@ -146,8 +137,6 @@ fun SystemsList(systems: MutableList<String>) {
                 )
             }
         }
-
-
 
         if (showDialog.value) {
             AlertDialog(
@@ -178,7 +167,7 @@ fun SystemsList(systems: MutableList<String>) {
                         val intent = Intent(context, AddSystem::class.java)
 
                         //context.startActivity(intent)
-                        systems.add(" System ${systems.size + 1}")
+                        user.value.boards.add(" System ${user.value.boards.size + 1}")
                         showDialog.value = false
                     }) {
 
@@ -189,7 +178,6 @@ fun SystemsList(systems: MutableList<String>) {
                     Button(onClick = {
 
                     }) {
-
                         Text("Bluetooth")
                     }
                 }
@@ -254,10 +242,3 @@ fun SystemItem(name: String) {
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun SystemsListPreview() {
-    SCMUAppTheme {
-        SystemsList(mutableListOf())
-    }
-}
