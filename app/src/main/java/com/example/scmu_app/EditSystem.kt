@@ -25,7 +25,7 @@ class EditSystem : ComponentActivity() {
                 ) {
 
 
-                    ManageSystemContent(true)
+                    ShowManageSystemContent(true, " ", "")
 
                 }
             }
@@ -37,6 +37,6 @@ class EditSystem : ComponentActivity() {
 @Composable
 fun EditSystemContentPreview() {
     SCMUAppTheme {
-        ManageSystemContent(true)
+        ShowManageSystemContent(true,"", "")
     }
 }

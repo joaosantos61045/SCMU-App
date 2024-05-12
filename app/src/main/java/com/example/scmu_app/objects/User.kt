@@ -1,6 +1,6 @@
 package com.example.scmu_app.objects
 
-class User(
+data class User(
     val id: String,
     val boards: MutableList<String>
 ) {

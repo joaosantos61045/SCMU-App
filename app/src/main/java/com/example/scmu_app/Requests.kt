@@ -21,13 +21,11 @@ fun postRequest(
 ) {
 
     val client = OkHttpClient()
-
     val mediaType = "application/json; charset=utf-8".toMediaType()
-    val requestBody = requestBody.toRequestBody(mediaType)
 
     val requestBuilder = Request.Builder()
         .url(endpoint)
-        .post(requestBody)
+        .post(requestBody.toRequestBody(mediaType))
 
     val request = requestBuilder.build()
     client.newCall(request).enqueue(object : Callback {

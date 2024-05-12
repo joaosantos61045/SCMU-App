@@ -1,5 +1,6 @@
 package com.example.scmu_app
 
+import android.annotation.SuppressLint
 import android.content.ContentResolver
 import android.content.ContextWrapper
 import android.provider.Settings
@@ -13,6 +14,7 @@ import okhttp3.Response
 import java.io.IOException
 
 val URL = "https://scmu.azurewebsites.net"
+@SuppressLint("HardwareIds")
 fun fetchUser(context: ContentResolver, onFailure: () -> Unit, onSuccess: (User) -> Unit) {
     val androidId = Settings.Secure.getString(context, Settings.Secure.ANDROID_ID)
 

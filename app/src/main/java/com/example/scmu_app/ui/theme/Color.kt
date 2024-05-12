@@ -14,3 +14,5 @@ val mintGreen = Color(0xffb3f4d2)
 val darkGreen = Color(0xFF306044)
 val bgGreen = Color(0xFF8CBF9F)
 val swampGreen = Color(0xFF5D8E70)
+
+val lockColor = Color(0x8D5D615F)

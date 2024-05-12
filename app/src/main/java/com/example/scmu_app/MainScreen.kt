@@ -34,10 +34,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.example.scmu_app.objects.User
+import com.example.scmu_app.ui.theme.CreateDefaultScaffold
 
 import com.example.scmu_app.ui.theme.SCMUAppTheme
 import com.example.scmu_app.ui.theme.bgGreen
-import com.example.scmu_app.ui.theme.createDefaultScaffold
 import com.example.scmu_app.ui.theme.createTile
 import com.example.scmu_app.ui.theme.darkGreen
 import com.example.scmu_app.ui.theme.mintGreen
@@ -52,37 +52,46 @@ class MainScreen : ComponentActivity() {
 
         installSplashScreen()
 
-
         enableEdgeToEdge()
         setContent {
             SCMUAppTheme {
-                createDefaultScaffold {
-                    SystemsList(this.contentResolver)
-                }
+                PreMain(this.contentResolver)
             }
         }
     }
 }
 
 @Composable
-fun SystemsList(contextResolver: ContentResolver) {
-    val context = LocalContext.current
-
-    //Fetch user from the database
-    val user = remember { mutableStateOf(User("", mutableListOf())) }
-    fetchUser(contextResolver,
-        onFailure = {},
-        onSuccess = {user.value = it}
-    )
+fun PreMain(contextResolver: ContentResolver) {
 
     val showDialog = remember { mutableStateOf(false) }
+    val showLoading = remember { mutableStateOf(true) }
+    val user = remember { mutableStateOf(User("", mutableListOf())) }
 
+    //Fetch user from the database
+    fetchUser(contextResolver,
+        onFailure = {},
+        onSuccess = {
+            showLoading.value = false
+            user.value = it
+        }
+    )
+
+    CreateDefaultScaffold(showLoading.value) {
+        ShowMain(user, showDialog)
+    }
+}
+
+@Composable
+fun ShowMain(
+    user: MutableState<User>,
+    showDialog: MutableState<Boolean>
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(mintGreen)
     ) {
-
         Image(
             painter = painterResource(id = R.drawable.image),
             contentDescription = "",
@@ -140,55 +149,65 @@ fun SystemsList(contextResolver: ContentResolver) {
             }
         }
 
-        if (showDialog.value) {
-            AlertDialog(
-                onDismissRequest = { showDialog.value = false },
-                title = { Text("Find System") },
-                text = {
-                    Column {
-                        TextField(
-                            value = "",
-                            onValueChange = {},
-                            label = { Text("System name") }
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        TextField(
-                            value = "",
-                            onValueChange = {},
-                            label = { Text(" System Id") }
-                        )
-                    }
-                },
-                dismissButton = {
-                    Button(onClick = { showDialog.value = false }) {
-                        Text("Back")
-                    }
-                },
-                confirmButton = {
-                    Button(onClick = {
-                        val intent = Intent(context, AddSystem::class.java)
-
-                        //context.startActivity(intent)
-                        user.value.boards.add(" System ${user.value.boards.size + 1}")
-                        showDialog.value = false
-                    }) {
-
-                        Text("Add System")
-                    }
-                },
-                icon = {
-                    Button(onClick = {
-
-                    }) {
-                        Text("Bluetooth")
-                    }
-                }
-            )
-        }
+        if (showDialog.value)
+            SystemListDialog(user, showDialog)
 
     }
 }
 
+@SuppressLint("UnrememberedMutableState")
+@Composable
+fun SystemListDialog(user: MutableState<User>, showDialog: MutableState<Boolean>) {
+    val context = LocalContext.current
+
+    var systemName  by remember { mutableStateOf("") }
+    var systemId  by remember { mutableStateOf("") }
+
+    AlertDialog(
+        onDismissRequest = { showDialog.value = false },
+        title = { Text("Add System") },
+        icon = {},
+        text = {
+
+            Column {
+                TextField(
+                    value = systemName,
+                    onValueChange = { systemName = it },
+                    label = { Text("System name") },
+
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                TextField(
+                    value = systemId,
+                    onValueChange = { systemId = it },
+                    label = { Text(" System Id") }
+                )
+            }
+        },
+        dismissButton = {
+            Button(onClick = { showDialog.value = false }) {
+                Text("Back")
+            }
+        },
+        confirmButton = {
+            Button(onClick = {
+                if(systemName.isEmpty() || systemId.isEmpty())
+                    return@Button
+
+                //TODO check if the system already exists
+                val intent = Intent(context, AddSystem::class.java).apply {
+                    putExtra("systemName", systemName)
+                    putExtra("systemId", systemId)
+                }
+
+                context.startActivity(intent)
+                showDialog.value = false
+            }) {
+                Text("Add System")
+            }
+        }
+    )
+}
 
 @Composable
 fun SystemItem(name: String) {

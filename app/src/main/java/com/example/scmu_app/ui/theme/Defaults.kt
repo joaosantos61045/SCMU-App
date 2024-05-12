@@ -1,6 +1,7 @@
 package com.example.scmu_app.ui.theme
 
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -25,7 +26,18 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import android.content.Context
+import android.graphics.Color
 import android.net.ConnectivityManager
+import android.text.Layout
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 
 val version = "1.1"
 
@@ -43,6 +55,7 @@ fun createTile(text: String) {
         Text(
             text = text,
             style = titleLarge,
+            color = androidx.compose.ui.graphics.Color.White,
             modifier = Modifier.padding(vertical = 5.dp, horizontal = 20.dp)
         )
     }
@@ -60,8 +73,9 @@ fun hasWIFI(): Boolean {
     return isConnected;
 }
 
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun createDefaultScaffold(system: @Composable () -> Unit) {
+fun CreateDefaultScaffold(showLoading: Boolean,  system: @Composable () -> Unit) {
     Scaffold(
         bottomBar = {
             Box(
@@ -72,9 +86,12 @@ fun createDefaultScaffold(system: @Composable () -> Unit) {
             )
         }
     ) {
-        if(hasWIFI())
-            system()
-        else createWifiConnectionPanel()
+        BoxWithConstraints() {
+            loadingScreen(showLoading)
+            if (hasWIFI())
+                system()
+            else createWifiConnectionPanel()
+        }
     }
 }
 
@@ -100,5 +117,27 @@ fun createWifiConnectionPanel() {
             modifier = Modifier
                 .offset(y = 20.dp)
                 .align(Alignment.Center))
+    }
+}
+
+@Composable
+fun loadingScreen(show: Boolean) {
+    if (!show) return
+
+    Column(
+        Modifier.zIndex(2000f)
+            .fillMaxSize()
+            .background(lockColor)
+            .clickable(false) {},
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+
+        CircularProgressIndicator(
+            modifier = Modifier.width(70.dp),
+            strokeWidth = 8.dp,
+            color = MaterialTheme.colorScheme.secondary,
+            trackColor = MaterialTheme.colorScheme.surfaceVariant,
+        )
     }
 }

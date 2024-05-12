@@ -31,6 +31,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.scmu_app.ui.theme.SCMUAppTheme
+import com.example.scmu_app.ui.theme.createTile
 
 
 class SystemStatus : ComponentActivity() {
@@ -92,7 +93,7 @@ fun SystemStatusContent() {
 
 
 
-        Subheader("Information", darkGreen)
+        createTile("Information")
         IconButton(
             onClick = { val intent = Intent(context, EditSystem::class.java)
 
@@ -110,7 +111,7 @@ fun SystemStatusContent() {
         }
         StatusItem(status = "Waiting", event ="1 hour" )
 
-        Subheader("History", darkGreen)
+        createTile("History")
 
            for (item in history) {
                HistoryItem(day = item[0], time = item[1], duration = item[2])

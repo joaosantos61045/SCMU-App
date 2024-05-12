@@ -25,7 +25,11 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.scmu_app.ui.theme.CreateDefaultScaffold
 import com.example.scmu_app.ui.theme.SCMUAppTheme
+import com.example.scmu_app.ui.theme.createTile
+import com.example.scmu_app.ui.theme.darkGreen
+import com.example.scmu_app.ui.theme.mintGreen
 
 
 class AddSystem : ComponentActivity() {
@@ -37,22 +41,20 @@ class AddSystem : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             SCMUAppTheme {
-                Scaffold(
+                CreateDefaultScaffold(false) {
+                    val systemName = intent.getStringExtra("systemName")!!
+                    val systemId = intent.getStringExtra("systemId")!!
 
-                ) {
-
-
-                    ManageSystemContent(false)
-
+                    ShowManageSystemContent(false, systemName, systemId)
                 }
             }
         }
-    }//onResume
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ManageSystemContent(canDelete: Boolean) {
+fun ShowManageSystemContent(canDelete: Boolean, sysName: String, sysId: String) {
     val context = LocalContext.current
     val timeIntervals = listOf(
         "00:00", "00:30",
@@ -83,11 +85,9 @@ fun ManageSystemContent(canDelete: Boolean) {
     val timeDurations = listOf(
         "5", "10", "15", "20", "25", "30"
     )
-    val mintGreen = Color(0xffbff4d2)
-    val darkGreen = Color(0xFF306044)
-    val bgGreen = Color(0xFF8CBF9F)
-    val swampGreen = Color(0xFF5D8E70)
+
     val showDialog = remember { mutableStateOf(false) }
+
     Column(
         modifier = Modifier
             .verticalScroll(rememberScrollState())
@@ -107,20 +107,11 @@ fun ManageSystemContent(canDelete: Boolean) {
             },
         )
 
-
-        Image(
-            painter = painterResource(id = R.drawable.image), // Replace 'your_image_resource' with your image resource ID
-            contentDescription = null, // Add appropriate content description
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp)
-        )
-
-        Subheader("General", darkGreen)
+        createTile("General")
+        TextBox("Name", sysName)
         var text = TextBox("WiFi")
-        TextBox("House Name")
 
-        Subheader("Schedule", darkGreen)
+        createTile("Schedule")
         Dropdown(
             "Duration (in Minutes)",
             timeDurations,
@@ -131,13 +122,14 @@ fun ManageSystemContent(canDelete: Boolean) {
             timeIntervals,
             "Hour"
         ) // Replace with appropriate hour options
-        Subheader("Rotation", darkGreen)
+        createTile("Rotation")
         // Add rotation content here
         DaySelectionRow()
-        Subheader("Notifications", darkGreen)
+        createTile("Notifications")
         ToggleButton("Smart Watering")
-        if(canDelete) {
-            Subheader("Dangerous", darkGreen)
+
+        if (canDelete) {
+            createTile("Dangerous")
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(16.dp)
@@ -162,20 +154,16 @@ fun ManageSystemContent(canDelete: Boolean) {
                 }
             }
 
-
-        }else{
+        } else {
             Button(onClick = {
                 val intent = Intent(context, EditSystem::class.java)
 
                 context.startActivity(intent)
             }) {
                 Text(text = "Add System")
-
             }
-
         }
-
-
+        
         if (showDialog.value) {
             AlertDialog(
                 onDismissRequest = { showDialog.value = false },
@@ -292,29 +280,11 @@ private fun toggleDaySelection(index: Int, selectedIndices: MutableList<Int>) {
     }
 }
 
-@Composable
-fun Subheader(text: String, color: Color) {
-    Box(
-        modifier = Modifier
-            .padding(top = 15.dp, start = 0.dp, end = 16.dp)
-            .background(color, shape = AbsoluteRoundedCornerShape(0.dp, 15.dp, 15.dp, 0.dp))
-            .width(200.dp)
-    ) {
-        Text(
-            text = text,
-            style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.padding(top = 0.dp, start = 15.dp, end = 16.dp),
-            color = Color.White,
-            fontSize = 20.sp
 
-        )
-    }
-
-}
 
 @Composable
-fun TextBox(label: String) {
-    var text by remember { mutableStateOf("") }
+fun TextBox(label: String, value: String = "") {
+    var text by remember { mutableStateOf(value) }
 
     OutlinedTextField(
         value = text,
@@ -379,6 +349,6 @@ fun Subsubheader(text: String) {
 @Composable
 fun AddSystemContentPreview() {
     SCMUAppTheme {
-        ManageSystemContent(false)
+        ShowManageSystemContent(false, "Test", "#arduino-01")
     }
 }
