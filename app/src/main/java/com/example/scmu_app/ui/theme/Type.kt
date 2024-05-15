@@ -35,6 +35,15 @@ val Typography = Typography(
     */
 )
 
+val titleExtraLarge = TextStyle(
+    fontFamily = FontFamily.SansSerif,
+    fontWeight = FontWeight.Bold,
+    fontSize = 31.sp,
+    lineHeight = 28.sp,
+    letterSpacing = 0.sp
+)
+
+
 val titleLarge = TextStyle(
     fontFamily = FontFamily.SansSerif,
     fontWeight = FontWeight.Bold,

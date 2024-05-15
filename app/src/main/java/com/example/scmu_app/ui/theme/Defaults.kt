@@ -87,10 +87,12 @@ fun CreateDefaultScaffold(showLoading: Boolean,  system: @Composable () -> Unit)
         }
     ) {
         BoxWithConstraints() {
-            loadingScreen(showLoading)
-            if (hasWIFI())
+            if (hasWIFI()) {
+                loadingScreen(showLoading)
                 system()
-            else createWifiConnectionPanel()
+            } else {
+                createWifiConnectionPanel()
+            }
         }
     }
 }
