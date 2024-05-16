@@ -2,19 +2,16 @@ package com.example.scmu_app
 
 import android.annotation.SuppressLint
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.AbsoluteRoundedCornerShape
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -28,20 +25,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import com.example.scmu_app.ui.theme.BoardInfo
 import com.example.scmu_app.ui.theme.SCMUAppTheme
 import com.example.scmu_app.ui.theme.createTile
+import com.example.scmu_app.ui.theme.dateToStandardFormat
+import com.example.scmu_app.ui.theme.getDateTime
 import com.example.scmu_app.ui.theme.mintGreen
 import com.example.scmu_app.ui.theme.swampGreen
 import com.example.scmu_app.ui.theme.titleExtraLarge
 
 
 class SystemStatus : ComponentActivity() {
+    @RequiresApi(Build.VERSION_CODES.O)
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -60,6 +59,8 @@ class SystemStatus : ComponentActivity() {
     }
 }
 
+@SuppressLint("SuspiciousIndentation")
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SystemStatusContent() {
@@ -72,12 +73,25 @@ fun SystemStatusContent() {
         listOf("Thu", "4:00 PM", "20 minutes"),
         // Add more entries as needed
     )
+
+
     val context = LocalContext.current
     val mintGreen = Color(0xffbff4d2)
     val darkGreen = Color(0xFF306044)
     val bgGreen = Color(0xFF8CBF9F)
     val swampGreen = Color(0xFF5D8E70)
     val showDialog = remember { mutableStateOf(false) }
+    val showLoading = remember { mutableStateOf(true) }
+    val boardInfo: MutableState<BoardInfo?> = remember { mutableStateOf(null) }
+    fetchBoardInfo(
+        onFailure = {},
+        onSuccess = {
+            showLoading.value = false
+            boardInfo.value = it
+        }
+    )
+
+
     Column(
         modifier = Modifier
             .verticalScroll(rememberScrollState())
@@ -145,7 +159,6 @@ fun SystemStatusContent() {
                             .offset(-10.dp, 10.dp)
 
 
-
                     ) {
                         Icon(
                             imageVector = Icons.Default.Settings,
@@ -180,8 +193,14 @@ fun SystemStatusContent() {
                                     .offset(0.dp, 30.dp)
                             ) {
 
+                                boardInfo.value?.let {
 
-                                StatusItem(status = "Waiting", event = "1 hour")
+                                    StatusItem(
+                                        status = it.board.getStates(),
+                                        event = (if (it.board.isOnline()) "Online" else "Offline")
+                                    )
+
+                                }
 
 
 
@@ -202,11 +221,18 @@ fun SystemStatusContent() {
                                     .offset(0.dp, 30.dp)
                             ) {
 
+                                boardInfo.value?.let {
 
-                                for (item in history) {
-                                    HistoryItem(day = item[0], time = item[1], duration = item[2])
+                                    for (item in it.events.reversed()) {
+                                        val startTime=getDateTime( item.start) // 9:30 - 10:00
+                                        val endTime= getDateTime(item.end)
+                                        if(item.asEvent)//TODO MAYBE?
+                                        HistoryItem(day = startTime.dayOfWeek.name , time = dateToStandardFormat(startTime)+ " - " + dateToStandardFormat(endTime),dayofMonth=startTime.dayOfMonth.toString()+" "+startTime.month.toString(),item.asEvent)
+
+                                    }
 
                                 }
+
                                 Spacer(modifier = Modifier.size(0.dp, 40.dp))
                             }
                         }
@@ -223,10 +249,10 @@ fun SystemStatusContent() {
 
 
 @Composable
-fun HistoryItem(day: String, time: String, duration: String) {
+fun HistoryItem(day: String, time: String, dayofMonth: String, asEvent: Boolean) {
 
     Surface(
-        color = swampGreen,
+        color = if (asEvent)swampGreen else Color.LightGray,
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp),
@@ -235,28 +261,35 @@ fun HistoryItem(day: String, time: String, duration: String) {
     ) {
 
 
-            Column(
-                modifier = Modifier.padding(10.dp)
-            ) {
-                Text(
-                    color = Color.White,
-                    fontSize = 25.sp,
-                    text = "$day",
-                    modifier = Modifier.padding(bottom = 8.dp).offset(0.dp, 25.dp)
-                )
-                Text(
-                    color = Color.White,
-                    fontSize = 20.sp,
-                    text = "Time: $time",
-                    modifier = Modifier.padding(bottom = 8.dp).offset(190.dp, -20.dp)
-                )
-                Text(
-                    color = Color.White,
-                    fontSize = 20.sp,
-                    text = "Duration: $duration",
-                    modifier = Modifier.offset(160.dp, -20.dp)
-                )
-            }
+        Column(
+            modifier = Modifier.padding(10.dp)
+        ) {
+            Text(
+                color = if (asEvent) Color.White else Color.Black,
+                fontSize = 25.sp,
+                text = "$day",
+                modifier = Modifier
+                    .padding(bottom = 8.dp)
+                    .offset(0.dp, 20.dp)
+            )
+            Text(
+                color = if (asEvent) Color.White else Color.Black,
+                fontSize = 25.sp,
+                text = "$dayofMonth",
+                modifier = Modifier
+                    .padding(bottom = 8.dp)
+                    .offset(0.dp, 20.dp)
+            )
+            Text(
+                color = if (asEvent) Color.White else Color.Black,
+                fontSize = 20.sp,
+                text = if(asEvent)"Time: $time" else "No Event Found",
+                modifier = Modifier
+                    .padding(bottom = 8.dp)
+                    .offset(170.dp, -30.dp)
+            )
+
+        }
 
     }
 }
@@ -294,19 +327,19 @@ fun StatusItem(status: String, event: String) {
         IconButton(
 
             onClick = { showDialog.value = true },
-            modifier = Modifier.size(48.dp).offset(0.dp,0.dp)
-                .background(shape = RoundedCornerShape(12.dp),color = swampGreen)
+            modifier = Modifier
+                .size(48.dp)
+                .offset(0.dp, 0.dp)
+                .background(shape = RoundedCornerShape(12.dp), color = swampGreen)
 
         ) {
             Icon(
                 imageVector = Icons.Default.Close,
                 contentDescription = "Close",
-                tint= Color.White,
+                tint = Color.White,
 
 
-
-
-            )
+                )
         }
     }
     if (showDialog.value) {
@@ -329,7 +362,8 @@ fun StatusItem(status: String, event: String) {
             dismissButton = {
                 Button(
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = darkGreen),
+                        containerColor = darkGreen
+                    ),
                     onClick = { showDialog.value = false }) {
                     Text("Back")
                 }
@@ -352,6 +386,7 @@ fun StatusItem(status: String, event: String) {
 }
 
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Preview(showBackground = true)
 @Composable
 fun ManageSystemPreview() {
