@@ -375,6 +375,7 @@ fun ShowManageSystemContent(canDelete: Boolean, sysName: String, sysId: String) 
 
     if (showDialog.value) {
         AlertDialog(
+            containerColor = mintGreen,
             onDismissRequest = { showDialog.value = false },
             title = { Text("Remove System") },
             text = {
@@ -391,7 +392,8 @@ fun ShowManageSystemContent(canDelete: Boolean, sysName: String, sysId: String) 
             },
             dismissButton = {
                 Button(
-
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = darkGreen),
                     onClick = { showDialog.value = false }) {
                     Text("Cancel")
                 }

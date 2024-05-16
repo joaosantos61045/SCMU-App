@@ -164,6 +164,7 @@ fun SystemListDialog(user: MutableState<User>, showDialog: MutableState<Boolean>
     var systemId  by remember { mutableStateOf("") }
 
     AlertDialog(
+        containerColor = mintGreen,
         onDismissRequest = { showDialog.value = false },
         title = { Text("Add System") },
         icon = {},
@@ -185,12 +186,18 @@ fun SystemListDialog(user: MutableState<User>, showDialog: MutableState<Boolean>
             }
         },
         dismissButton = {
-            Button(onClick = { showDialog.value = false }) {
+
+            Button(
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = darkGreen),
+                onClick = { showDialog.value = false }) {
                 Text("Back")
             }
         },
         confirmButton = {
-            Button(onClick = {
+            Button(colors = ButtonDefaults.buttonColors(
+                containerColor = darkGreen),
+                onClick = {
                 if(systemName.isEmpty() || systemId.isEmpty())
                     return@Button
 
