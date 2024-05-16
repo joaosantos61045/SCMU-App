@@ -33,6 +33,7 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -102,6 +103,7 @@ fun ShowManageSystemContent(canDelete: Boolean, sysName: String, sysId: String) 
 
 
         BoxWithConstraints {
+
             Row(
                 modifier = Modifier
                     .fillMaxSize()
@@ -123,7 +125,9 @@ fun ShowManageSystemContent(canDelete: Boolean, sysName: String, sysId: String) 
                     Icon(
                         Icons.Filled.ArrowBack,
                         contentDescription = "Go back",
-                        modifier = Modifier.size(30.dp)
+                        modifier = Modifier.size(30.dp),
+                        tint = Color.White
+
                     )
                 }
 
@@ -139,7 +143,7 @@ fun ShowManageSystemContent(canDelete: Boolean, sysName: String, sysId: String) 
                         .padding(10.dp, 5.dp)
                 ) {
                     Text(
-                        text = "Add System:",
+                        text = " System ",
                         style = titleExtraLarge,
                         color = Color.White,
                         modifier = Modifier.padding(20.dp, 3.dp, 30.dp, 3.dp)
@@ -152,7 +156,7 @@ fun ShowManageSystemContent(canDelete: Boolean, sysName: String, sysId: String) 
                 modifier = Modifier
                     .fillMaxSize()
                     .offset(0.dp, 70.dp)
-                    .height(1000.dp) //TODO
+                    .height(1175.dp) //TODO
                     .background(swampGreen)
             ) {
 
@@ -290,83 +294,83 @@ fun ShowManageSystemContent(canDelete: Boolean, sysName: String, sysId: String) 
                             }
                         }
                     }
+
+                    Spacer(modifier = Modifier.size(0.dp, 40.dp))
+                    BoxWithConstraints {
+                        if (canDelete) {
+                            createTile("Dangerous")
+                            Row(
+                                Modifier
+                                    .offset(0.dp, 20.dp)
+                            ) {
+                                Column(
+                                    Modifier
+                                        .background(mintGreen)
+                                        .offset(0.dp, 30.dp)
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.padding(16.dp)
+                                    ) {
+                                        Text(
+                                            text = "Remove System",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                        Button(
+                                            onClick = { showDialog.value = true },
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = Color.Red
+                                            )
+                                        ) {
+                                            Text(text = "Remove System")
+                                        }
+                                    }
+                                    Spacer(modifier = Modifier.size(0.dp, 40.dp))
+                                }
+                            }
+
+                        } else {
+
+                            Row(
+                                Modifier
+                                    .offset(0.dp, -25.dp)
+                            ) {
+                                Column(
+                                    Modifier
+
+                                        .offset(0.dp, 0.dp)
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.padding(16.dp)
+                                    ) {
+
+                                        Button(onClick = {
+                                            val intent = Intent(context, EditSystem::class.java)
+
+                                            context.startActivity(intent)
+                                        },
+                                           modifier= Modifier.size(400.dp,50.dp),
+                                            colors= ButtonDefaults.buttonColors(darkGreen)) {
+                                            Text(
+                                                fontSize = 22.sp,
+                                                text = "Add System")
+                                        }
+
+                                    }
+                                    Spacer(modifier = Modifier.size(0.dp, 40.dp))
+                                }
+                            }
+
+                        }
+                    }
                 }
             }
 
         }
 
 
-    }
-
-
-    /*TopAppBar(
-
-        title = { Text(" System") },
-        navigationIcon = {
-            IconButton(onClick = {
-                val intent = Intent(context, MainScreen::class.java)
-                context.startActivity(intent)
-            }) {
-                Icon(Icons.Filled.ArrowBack, contentDescription = "Go back")
-            }
-        },
-    )*/
-
-    //createTile("General")
-    // TextBox("Name", sysName)
-    //var text = TextBox("WiFi")
-
-    /*createTile("Schedule")
-    Dropdown(
-        "Duration (in Minutes)",
-        timeDurations,
-        "Duration"
-    ) // Replace with appropriate duration options
-    Dropdown(
-        "Hour of System Start",
-        timeIntervals,
-        "Hour"
-    ) // Replace with appropriate hour options
-    createTile("Rotation")
-    // Add rotation content here
-    DaySelectionRow()
-    createTile("Notifications")
-    ToggleButton("Smart Watering")
-
-    if (canDelete) {
-        createTile("Dangerous")
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Text(
-                text = "Remove System",
-                color = Color.Red,
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.weight(1f)
-            )
-            Button(
-                onClick = { showDialog.value = true },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Red
-                )
-            ) {
-                Text(
-                    text = "Remove System",
-                    color = Color.White
-                )
-
-            }
-        }
-
-    } else {
-        Button(onClick = {
-            val intent = Intent(context, EditSystem::class.java)
-
-            context.startActivity(intent)
-        }) {
-            Text(text = "Add System")
-        }
     }
 
     if (showDialog.value) {
@@ -406,7 +410,7 @@ fun ShowManageSystemContent(canDelete: Boolean, sysName: String, sysId: String) 
             },
 
             )
-    }*/
+    }
 
 
 }
@@ -571,6 +575,6 @@ fun Subsubheader(text: String) {
 @Composable
 fun AddSystemContentPreview() {
     SCMUAppTheme {
-        ShowManageSystemContent(false, "Test", "#arduino-01")
+        ShowManageSystemContent(true, "Test", "#arduino-01")
     }
 }

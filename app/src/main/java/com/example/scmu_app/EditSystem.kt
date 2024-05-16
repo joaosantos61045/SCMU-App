@@ -9,6 +9,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
+import com.example.scmu_app.ui.theme.CreateDefaultScaffold
 import com.example.scmu_app.ui.theme.SCMUAppTheme
 
 class EditSystem : ComponentActivity() {
@@ -20,13 +21,11 @@ class EditSystem : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             SCMUAppTheme {
-                Scaffold(
+                CreateDefaultScaffold(false) {
+                    //val systemName = intent.getStringExtra("systemName")!!
+                   // val systemId = intent.getStringExtra("systemId")!!
 
-                ) {
-
-
-                    ShowManageSystemContent(true, " ", "")
-
+                    ShowManageSystemContent(true, "systemName", "systemId")
                 }
             }
         }
