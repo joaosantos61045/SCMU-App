@@ -29,11 +29,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import com.example.scmu_app.objects.User
+import com.example.scmu_app.others.User
+import com.example.scmu_app.others.fetchUser
 import com.example.scmu_app.ui.theme.CreateDefaultScaffold
 
 import com.example.scmu_app.ui.theme.SCMUAppTheme
@@ -119,8 +119,8 @@ fun ShowMain(
                             userScrollEnabled = true,
                             modifier = Modifier.padding(bottom = 65.dp)
                         ) {
-                            items(user.value.boards) { system ->
-                                SystemItem(name = system)
+                            items(user.value.boards) { board ->
+                                SystemItem(name = board.name)
                             }
                         }
 

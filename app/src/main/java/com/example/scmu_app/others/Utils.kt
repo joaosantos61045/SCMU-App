@@ -1,4 +1,4 @@
-package com.example.scmu_app.ui.theme
+package com.example.scmu_app.others
 
 import android.os.Build
 import androidx.annotation.RequiresApi

@@ -29,11 +29,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
-import com.example.scmu_app.ui.theme.BoardInfo
+import com.example.scmu_app.others.BoardInfo
 import com.example.scmu_app.ui.theme.SCMUAppTheme
 import com.example.scmu_app.ui.theme.createTile
-import com.example.scmu_app.ui.theme.dateToStandardFormat
-import com.example.scmu_app.ui.theme.getDateTime
+import com.example.scmu_app.others.dateToStandardFormat
+import com.example.scmu_app.others.fetchBoardInfo
+import com.example.scmu_app.others.getDateTime
 import com.example.scmu_app.ui.theme.mintGreen
 import com.example.scmu_app.ui.theme.swampGreen
 import com.example.scmu_app.ui.theme.titleExtraLarge
@@ -224,10 +225,10 @@ fun SystemStatusContent() {
                                 boardInfo.value?.let {
 
                                     for (item in it.events.reversed()) {
-                                        val startTime=getDateTime( item.start) // 9:30 - 10:00
+                                        val startTime= getDateTime( item.start) // 9:30 - 10:00
                                         val endTime= getDateTime(item.end)
                                         if(item.asEvent)//TODO MAYBE?
-                                        HistoryItem(day = startTime.dayOfWeek.name , time = dateToStandardFormat(startTime)+ " - " + dateToStandardFormat(endTime),dayofMonth=startTime.dayOfMonth.toString()+" "+startTime.month.toString(),item.asEvent)
+                                        HistoryItem(day = startTime.dayOfWeek.name , time = dateToStandardFormat(startTime) + " - " + dateToStandardFormat(endTime),dayofMonth=startTime.dayOfMonth.toString()+" "+startTime.month.toString(),item.asEvent)
 
                                     }
 

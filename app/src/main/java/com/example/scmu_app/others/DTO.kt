@@ -1,4 +1,15 @@
-package com.example.scmu_app.ui.theme
+package com.example.scmu_app.others
+
+data class User(
+    val id: String,
+    val boards: MutableList<UserBoard>
+)
+
+data class UserBoard(
+    val board: String,
+    val name: String,
+    val notifications: Boolean
+)
 
 data class Board(
     val id: String,

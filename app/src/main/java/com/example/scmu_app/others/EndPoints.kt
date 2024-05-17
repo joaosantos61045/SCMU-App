@@ -1,18 +1,9 @@
-package com.example.scmu_app
+package com.example.scmu_app.others
 
 import android.annotation.SuppressLint
 import android.content.ContentResolver
-import android.content.ContextWrapper
 import android.provider.Settings
-import com.example.scmu_app.objects.User
-import com.example.scmu_app.ui.theme.BoardInfo
 import com.google.gson.Gson
-import okhttp3.Call
-import okhttp3.Callback
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.Response
-import java.io.IOException
 
 val URL = "https://scmu.azurewebsites.net"
 @SuppressLint("HardwareIds")

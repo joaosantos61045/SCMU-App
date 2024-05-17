@@ -1,4 +1,4 @@
-package com.example.scmu_app
+package com.example.scmu_app.others
 
 import android.util.Log
 import okhttp3.Call
