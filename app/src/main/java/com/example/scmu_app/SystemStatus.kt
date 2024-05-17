@@ -25,19 +25,24 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.example.scmu_app.others.BoardInfo
+import com.example.scmu_app.others.Event
 import com.example.scmu_app.ui.theme.SCMUAppTheme
 import com.example.scmu_app.ui.theme.createTile
 import com.example.scmu_app.others.dateToStandardFormat
 import com.example.scmu_app.others.fetchBoardInfo
 import com.example.scmu_app.others.getDateTime
+import com.example.scmu_app.ui.theme.CreateDefaultScaffold
 import com.example.scmu_app.ui.theme.mintGreen
 import com.example.scmu_app.ui.theme.swampGreen
 import com.example.scmu_app.ui.theme.titleExtraLarge
+import java.time.format.TextStyle
+import java.util.Locale
 
 
 class SystemStatus : ComponentActivity() {
@@ -49,31 +54,18 @@ class SystemStatus : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             SCMUAppTheme {
-                Scaffold {
-
-
-                    SystemStatusContent()
-
-                }
+                PreSystemStatusContent()
             }
         }
     }
 }
 
-@SuppressLint("SuspiciousIndentation")
 @RequiresApi(Build.VERSION_CODES.O)
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SystemStatusContent() {
-
-    val context = LocalContext.current
-    val mintGreen = Color(0xffbff4d2)
-    val darkGreen = Color(0xFF306044)
-    val bgGreen = Color(0xFF8CBF9F)
-    val swampGreen = Color(0xFF5D8E70)
-    val showDialog = remember { mutableStateOf(false) }
+fun PreSystemStatusContent() {
     val showLoading = remember { mutableStateOf(true) }
     val boardInfo: MutableState<BoardInfo?> = remember { mutableStateOf(null) }
+
     fetchBoardInfo(
         onFailure = {},
         onSuccess = {
@@ -82,6 +74,23 @@ fun SystemStatusContent() {
         }
     )
 
+    CreateDefaultScaffold(showLoading.value) {
+        SystemStatusContent(boardInfo)
+    }
+}
+
+@SuppressLint("SuspiciousIndentation")
+@RequiresApi(Build.VERSION_CODES.O)
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SystemStatusContent(boardInfo: MutableState<BoardInfo?>) {
+
+    val context = LocalContext.current
+    val mintGreen = Color(0xffbff4d2)
+    val darkGreen = Color(0xFF306044)
+    val bgGreen = Color(0xFF8CBF9F)
+    val swampGreen = Color(0xFF5D8E70)
+    val showDialog = remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -148,7 +157,7 @@ fun SystemStatusContent() {
                         modifier = Modifier
                             .size(40.dp)
                             .offset(-10.dp, 5.dp)
-                            .background(swampGreen,  RoundedCornerShape(15.dp))
+                            .background(swampGreen, RoundedCornerShape(15.dp))
 
 
                     ) {
@@ -159,7 +168,7 @@ fun SystemStatusContent() {
                             tint = Color.White,
 
 
-                        )
+                            )
                     }
                 }
 
@@ -216,10 +225,8 @@ fun SystemStatusContent() {
                                 boardInfo.value?.let {
 
                                     for (item in it.events.reversed()) {
-                                        val startTime= getDateTime( item.start) // 9:30 - 10:00
-                                        val endTime= getDateTime(item.end)
-                                        if(item.asEvent)//TODO MAYBE?
-                                        HistoryItem(day = startTime.dayOfWeek.name , time = dateToStandardFormat(startTime) + " - " + dateToStandardFormat(endTime),dayofMonth=startTime.dayOfMonth.toString()+" "+startTime.month.toString(),item.asEvent)
+                                        if (item.eventState != 2)//TODO MAYBE?
+                                            HistoryItem(item)
 
                                     }
 
@@ -240,46 +247,52 @@ fun SystemStatusContent() {
 }
 
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun HistoryItem(day: String, time: String, dayofMonth: String, asEvent: Boolean) {
+fun HistoryItem(item: Event) {
+    val hasEvent = item.eventState == 3
+    val startTime = getDateTime(item.start)
+    val endTime = getDateTime(item.end)
+
+    val month = startTime.month.getDisplayName(TextStyle.SHORT, Locale.ENGLISH)
+    val time = dateToStandardFormat(startTime) + " - " + dateToStandardFormat(endTime)
 
     Surface(
-        color = if (asEvent)swampGreen else Color.LightGray,
+        color = if (hasEvent) swampGreen else Color.LightGray,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.dp),
-        shape = RoundedCornerShape(25.dp)
+            .padding(10.dp, 3.dp),
+        shape = RoundedCornerShape(15.dp)
 
     ) {
 
 
-        Column(
-            modifier = Modifier.padding(10.dp)
+        Row(
+            modifier = Modifier.padding(15.dp)
         ) {
-            Text(
-                color = if (asEvent) Color.White else Color.Black,
-                fontSize = 25.sp,
-                text = "$day",
-                modifier = Modifier
-                    .padding(bottom = 8.dp)
-                    .offset(0.dp, 20.dp)
-            )
-            Text(
-                color = if (asEvent) Color.White else Color.Black,
-                fontSize = 25.sp,
-                text = "$dayofMonth",
-                modifier = Modifier
-                    .padding(bottom = 8.dp)
-                    .offset(0.dp, 20.dp)
-            )
-            Text(
-                color = if (asEvent) Color.White else Color.Black,
-                fontSize = 20.sp,
-                text = if(asEvent)"Time: $time" else "No Event Found",
-                modifier = Modifier
-                    .padding(bottom = 8.dp)
-                    .offset(170.dp, -30.dp)
-            )
+
+            Column() {
+                Text(
+                    color = if (hasEvent) Color.White else Color.Black,
+                    fontSize = 20.sp,
+                    fontWeight = if (hasEvent) FontWeight.Bold else FontWeight.Normal,
+                    text = "${startTime.dayOfMonth} ${month}",
+                    modifier = Modifier
+                )
+
+            }
+
+            Column(
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.Center,
+                modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    color = if (hasEvent) Color.White else Color.Black,
+                    fontSize = 16.sp,
+                    text = if (hasEvent) time else item.getStates(),
+                    modifier = Modifier
+                )
+            }
 
         }
 
@@ -376,15 +389,5 @@ fun StatusItem(status: String, event: String) {
             },
 
             )
-    }
-}
-
-
-@RequiresApi(Build.VERSION_CODES.O)
-@Preview(showBackground = true)
-@Composable
-fun ManageSystemPreview() {
-    SCMUAppTheme {
-        SystemStatusContent()
     }
 }

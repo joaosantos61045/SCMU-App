@@ -20,8 +20,6 @@ data class Board(
     val state: Int,
     val currentState: Int,
     val lastUpdate: Long,
-    //   val data: List<Any>,
-    // val status: List<Any>
 
 ) {
    fun isOnline():Boolean{return System.currentTimeMillis()/1000 - lastUpdate < 20  }
@@ -32,6 +30,7 @@ data class Board(
         else
             "Offline"
     }
+
 }
 
 data class Event(
@@ -42,8 +41,13 @@ data class Event(
     val avgTemp: Double,
     val avgHum: Double,
     val timeLine: List<TimeLine>,
-    val asEvent: Boolean
-)
+    val eventState: Int
+) {
+    fun getStates(): String {
+        val statusList = listOf("Canceled", "Canceled", "Not Scheduled", "Scheduled")
+        return statusList[eventState]
+    }
+}
 
 data class TimeLine(
     val start: Long,

@@ -40,3 +40,26 @@ fun postRequest(
 
 
 }
+
+fun getRequest(
+    endpoint: String,
+    onFailure: (exception: IOException) -> Unit,
+    onSuccess: (response: Response) -> Unit
+) {
+    val client = OkHttpClient()
+
+    val requestBuilder = Request.Builder()
+        .url(endpoint)
+        .get()
+
+    val request = requestBuilder.build()
+    client.newCall(request).enqueue(object : Callback {
+        override fun onFailure(call: Call, e: IOException) {
+            onFailure(e)
+        }
+
+        override fun onResponse(call: Call, response: Response) {
+            onSuccess(response)
+        }
+    })
+}

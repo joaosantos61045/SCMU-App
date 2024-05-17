@@ -14,6 +14,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -69,6 +70,7 @@ class MainScreen : ComponentActivity() {
 fun PreMain(contextResolver: ContentResolver) {
 
     val showDialog = remember { mutableStateOf(false) }
+    val showNameDialog = remember { mutableStateOf(false) }
     val showLoading = remember { mutableStateOf(true) }
     val user = remember { mutableStateOf(User("", mutableListOf())) }
 
@@ -82,14 +84,15 @@ fun PreMain(contextResolver: ContentResolver) {
     )
 
     CreateDefaultScaffold(showLoading.value) {
-        ShowMain(user, showDialog)
+        ShowMain(user, showDialog, showNameDialog)
     }
 }
 
 @Composable
 fun ShowMain(
     user: MutableState<User>,
-    showDialog: MutableState<Boolean>
+    showDialog: MutableState<Boolean>,
+    showNameDialog: MutableState<Boolean>
 ) {
     Column(
         modifier = Modifier
@@ -170,14 +173,15 @@ fun ShowMain(
         }
 
         if (showDialog.value)
-            SystemListDialog(user, showDialog)
-
+            SystemListDialog(user, showDialog, showNameDialog)
+        if(showNameDialog.value)
+            SystemNameDialog(showNameDialog)
     }
 }
 
 @SuppressLint("UnrememberedMutableState")
 @Composable
-fun SystemListDialog(user: MutableState<User>, showDialog: MutableState<Boolean>) {
+fun SystemListDialog(user: MutableState<User>, showDialog: MutableState<Boolean>,showNameDialog: MutableState<Boolean>) {
     val context = LocalContext.current
 
     var systemName  by remember { mutableStateOf("") }
@@ -189,7 +193,6 @@ fun SystemListDialog(user: MutableState<User>, showDialog: MutableState<Boolean>
         title = { Text("Add System", color = darkGreen, fontWeight = FontWeight.Bold, fontSize = 28.sp) },
         icon = {},
         text = {
-
             Column {
                 TextBox(
                     value = "",
@@ -217,18 +220,56 @@ fun SystemListDialog(user: MutableState<User>, showDialog: MutableState<Boolean>
             Button(colors = ButtonDefaults.buttonColors(
                 containerColor = darkGreen),
                 onClick = {
-                if(systemName.isEmpty() || systemId.isEmpty())
-                    return@Button
+                //if(systemName.isEmpty() || systemId.isEmpty())
+                //    return@Button
 
-                //TODO check if the system already exists
-                val intent = Intent(context, AddSystem::class.java).apply {
+                    showNameDialog.value = true
+                    //TODO check if the system already exists
+                /*val intent = Intent(context, AddSystem::class.java).apply {
                     putExtra("systemName", systemName)
                     putExtra("systemId", systemId)
                 }
 
-                context.startActivity(intent)
+                context.startActivity(intent)*/
+
                 showDialog.value = false
             }) {
+                Text("Add",color = Color.White)
+            }
+        }
+    )
+}
+
+@SuppressLint("UnrememberedMutableState")
+@Composable
+fun SystemNameDialog(showNameDialog: MutableState<Boolean>) {
+    AlertDialog(
+        containerColor = mintGreen,
+        onDismissRequest = { showNameDialog.value = false },
+        title = { Text("Give a name", color = darkGreen, fontWeight = FontWeight.Bold, fontSize = 28.sp) },
+        icon = {},
+        text = {
+            Column {
+                TextBox(
+                    value = "",
+                    label = "Name",
+                    password = false)
+            }
+        },
+        dismissButton = {
+            Button(
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.LightGray),
+                onClick = { showNameDialog.value = false }) {
+                Text("Cancel",color = Color.Black)
+            }
+        },
+        confirmButton = {
+            Button(colors = ButtonDefaults.buttonColors(
+                containerColor = darkGreen),
+                onClick = {
+                    showNameDialog.value = false
+                }) {
                 Text("Add",color = Color.White)
             }
         }
@@ -241,6 +282,7 @@ fun SystemItem(name: String, id: String) {
     Spacer(modifier = Modifier.size(0.dp, 20.dp))
     Surface(
         color = mintGreen,
+        shape = RoundedCornerShape(15.dp),
         modifier = Modifier
             .fillMaxWidth()
             .padding(10.dp)
