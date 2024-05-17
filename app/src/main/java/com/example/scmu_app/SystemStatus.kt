@@ -66,16 +66,6 @@ class SystemStatus : ComponentActivity() {
 @Composable
 fun SystemStatusContent() {
 
-
-    val history = listOf(
-        listOf(" Mon", "9:00 AM", "30 minutes"),
-        listOf("Tue", "10:30 AM", "45 minutes"),
-        listOf("Wed", "2:15 PM", "1 minute"),
-        listOf("Thu", "4:00 PM", "20 minutes"),
-        // Add more entries as needed
-    )
-
-
     val context = LocalContext.current
     val mintGreen = Color(0xffbff4d2)
     val darkGreen = Color(0xFF306044)
@@ -113,7 +103,7 @@ fun SystemStatusContent() {
                     modifier = Modifier
                         .background(
                             color = com.example.scmu_app.ui.theme.darkGreen,
-                            shape = RoundedCornerShape(15.dp, 15.dp, 15.dp, 15.dp)
+                            shape = RoundedCornerShape(15.dp)
                         )
                         .padding(10.dp, 5.dp),
                     onClick = {
@@ -156,16 +146,17 @@ fun SystemStatusContent() {
                             context.startActivity(intent)
                         },
                         modifier = Modifier
-                            .size(30.dp)
-                            .offset(-10.dp, 10.dp)
+                            .size(40.dp)
+                            .offset(-10.dp, 5.dp)
+                            .background(swampGreen,  RoundedCornerShape(15.dp))
 
 
                     ) {
                         Icon(
                             imageVector = Icons.Default.Settings,
                             contentDescription = "Settings",
-                            modifier = Modifier.background(swampGreen),
-                            tint = Color.White
+                            modifier = Modifier.size(80.dp),
+                            tint = Color.White,
 
 
                         )
@@ -302,7 +293,7 @@ fun StatusItem(status: String, event: String) {
     val showDialog = remember { mutableStateOf(false) }
 
     Row(
-        modifier = Modifier.padding(16.dp),
+        modifier = Modifier.padding(0.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Image(
@@ -318,10 +309,12 @@ fun StatusItem(status: String, event: String) {
         ) {
             Text(
                 text = "Status: $status",
+                color = Color.Black,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
             Text(
                 text = "Next event in: $event",
+                color = Color.Black,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
         }
@@ -330,7 +323,7 @@ fun StatusItem(status: String, event: String) {
             onClick = { showDialog.value = true },
             modifier = Modifier
                 .size(48.dp)
-                .offset(0.dp, 0.dp)
+                .offset(-20.dp, 0.dp)
                 .background(shape = RoundedCornerShape(12.dp), color = swampGreen)
 
         ) {

@@ -517,7 +517,7 @@ fun TextBox(label: String, value: String = "", password: Boolean = false) {
             unfocusedLabelColor = darkGreen,
         ),
         modifier = Modifier
-            .padding(horizontal = 16.dp, vertical = 6.dp)
+            .padding(horizontal = 16.dp, vertical = 2.dp)
             .fillMaxWidth(),
 
         )

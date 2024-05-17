@@ -18,6 +18,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 
@@ -29,7 +30,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.example.scmu_app.others.User
@@ -41,6 +44,7 @@ import com.example.scmu_app.ui.theme.bgGreen
 import com.example.scmu_app.ui.theme.createTile
 import com.example.scmu_app.ui.theme.darkGreen
 import com.example.scmu_app.ui.theme.mintGreen
+import com.example.scmu_app.ui.theme.titleExtraLarge
 import com.example.scmu_app.ui.theme.titleSmall
 import com.example.scmu_app.ui.theme.titleMedium
 
@@ -98,12 +102,28 @@ fun ShowMain(
             modifier = Modifier
                 .align(Alignment.CenterHorizontally)
                 .padding(top = 25.dp)
-                .height(90.dp)
+                .height(110.dp)
         )
 
 
         BoxWithConstraints {
-            createTile(text = "Systems:")
+            Row(
+
+                modifier = Modifier
+                    .background(
+                        color = darkGreen,
+                        shape = RoundedCornerShape(0.dp, 15.dp, 15.dp, 0.dp)
+                    )
+                    .zIndex(1f)
+                    .padding(10.dp, 5.dp)
+            ) {
+                Text(
+                    text = " Systems        ",
+                    style = titleExtraLarge,
+                    color = Color.White,
+                    modifier = Modifier.padding(20.dp, 3.dp, 30.dp, 3.dp)
+                )
+            }
 
             Column(
                 content = {
@@ -120,7 +140,7 @@ fun ShowMain(
                             modifier = Modifier.padding(bottom = 65.dp)
                         ) {
                             items(user.value.boards) { board ->
-                                SystemItem(name = board.name)
+                                SystemItem(name = board.name, id = board.board)
                             }
                         }
 
@@ -166,32 +186,31 @@ fun SystemListDialog(user: MutableState<User>, showDialog: MutableState<Boolean>
     AlertDialog(
         containerColor = mintGreen,
         onDismissRequest = { showDialog.value = false },
-        title = { Text("Add System") },
+        title = { Text("Add System", color = darkGreen, fontWeight = FontWeight.Bold, fontSize = 28.sp) },
         icon = {},
         text = {
 
             Column {
-                TextField(
-                    value = systemName,
-                    onValueChange = { systemName = it },
-                    label = { Text("System name") },
+                TextBox(
+                    value = "",
+                    label = "ID",
+                    password = false)
 
-                )
                 Spacer(modifier = Modifier.height(8.dp))
-                TextField(
-                    value = systemId,
-                    onValueChange = { systemId = it },
-                    label = { Text(" System Id") }
-                )
+
+                TextBox(
+                    value = "",
+                    label = "Password",
+                    password = true)
             }
         },
         dismissButton = {
 
             Button(
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = darkGreen),
+                    containerColor = Color.LightGray),
                 onClick = { showDialog.value = false }) {
-                Text("Back")
+                Text("Back",color = Color.Black)
             }
         },
         confirmButton = {
@@ -210,29 +229,29 @@ fun SystemListDialog(user: MutableState<User>, showDialog: MutableState<Boolean>
                 context.startActivity(intent)
                 showDialog.value = false
             }) {
-                Text("Add System")
+                Text("Add",color = Color.White)
             }
         }
     )
 }
 
 @Composable
-fun SystemItem(name: String) {
+fun SystemItem(name: String, id: String) {
     val context = LocalContext.current
+    Spacer(modifier = Modifier.size(0.dp, 20.dp))
     Surface(
         color = mintGreen,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 20.dp)
+            .padding(10.dp)
             .clickable {
                 // Navigate to detail screen when clicked
                 val intent = Intent(context, SystemStatus::class.java)
-
                 context.startActivity(intent)
             }
     ) {
 
-        Row() {
+        Row(Modifier.padding(10.dp)) {
             Image(
                 painter = painterResource(id = R.drawable.image01),
                 contentDescription = "",
@@ -244,7 +263,7 @@ fun SystemItem(name: String) {
 
             Column(
                 modifier =
-                Modifier.padding(start = 16.dp, top = 16.dp)
+                Modifier.padding(start = 16.dp, top = 30.dp)
             ) {
                 Text(
                     text = name,
@@ -253,18 +272,12 @@ fun SystemItem(name: String) {
                 )
 
                 Text(
-                    text = "ID: #arduino01",
+                    text = "ID: #$id",
                     color = Color.Black,
                     style = titleSmall,
                     modifier = Modifier.padding(start = 15.dp)
                 )
 
-                Text(
-                    text = "Next event in: x time",
-                    color = darkGreen,
-                    style = titleSmall,
-                    modifier = Modifier.padding(start = 15.dp)
-                )
             }
         }
     }
