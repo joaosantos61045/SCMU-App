@@ -26,7 +26,7 @@ data class Board(
     fun getStates(): String {
         val statusList = listOf("Running", "Paused", "Waiting")
         return if(isOnline())
-            statusList[state]
+            statusList[currentState]
         else
             "Offline"
     }
@@ -44,7 +44,7 @@ data class Event(
     val eventState: Int
 ) {
     fun getStates(): String {
-        val statusList = listOf("Canceled", "Canceled", "Not Scheduled", "Scheduled")
+        val statusList = listOf("User canceled", "Auto canceled", "Not Scheduled", "Scheduled")
         return statusList[eventState]
     }
 }

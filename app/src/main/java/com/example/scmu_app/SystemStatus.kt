@@ -41,6 +41,7 @@ import com.example.scmu_app.ui.theme.CreateDefaultScaffold
 import com.example.scmu_app.ui.theme.mintGreen
 import com.example.scmu_app.ui.theme.swampGreen
 import com.example.scmu_app.ui.theme.titleExtraLarge
+import kotlinx.coroutines.delay
 import java.time.format.TextStyle
 import java.util.Locale
 
@@ -66,13 +67,18 @@ fun PreSystemStatusContent() {
     val showLoading = remember { mutableStateOf(true) }
     val boardInfo: MutableState<BoardInfo?> = remember { mutableStateOf(null) }
 
-    fetchBoardInfo(
-        onFailure = {},
-        onSuccess = {
-            showLoading.value = false
-            boardInfo.value = it
+    LaunchedEffect(Unit) {
+        while (true) {
+            fetchBoardInfo(
+                onFailure = {},
+                onSuccess = {
+                    showLoading.value = false
+                    boardInfo.value = it
+                }
+            )
+            delay(1000)
         }
-    )
+    }
 
     CreateDefaultScaffold(showLoading.value) {
         SystemStatusContent(boardInfo)
