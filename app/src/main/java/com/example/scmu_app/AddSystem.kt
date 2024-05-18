@@ -314,7 +314,11 @@ fun ShowManageSystemContent(canDelete: Boolean, sysName: String, sysId: String) 
                                     ) {
                                         Text(
                                             text = "Remove System",
-                                            style = MaterialTheme.typography.bodyMedium,
+                                            style = TextStyle(
+                                                fontSize = 18.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = Color.Black
+                                            ),
                                             modifier = Modifier.weight(1f)
                                         )
                                         Button(
@@ -323,7 +327,7 @@ fun ShowManageSystemContent(canDelete: Boolean, sysName: String, sysId: String) 
                                                 containerColor = Color.Red
                                             )
                                         ) {
-                                            Text(text = "Remove System")
+                                            Text(text = "Remove")
                                         }
                                     }
                                     Spacer(modifier = Modifier.size(0.dp, 40.dp))
@@ -428,10 +432,18 @@ fun ToggleButton(text: String) {
     ) {
         Text(
             text = text,
-            style = MaterialTheme.typography.bodyMedium,
+            style = TextStyle(
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Black
+            ),
             modifier = Modifier.weight(1f)
         )
         Switch(
+            colors = SwitchDefaults.colors(
+                checkedTrackColor= darkGreen
+            ),
+
             checked = isChecked,
             onCheckedChange = { isChecked = it }
         )

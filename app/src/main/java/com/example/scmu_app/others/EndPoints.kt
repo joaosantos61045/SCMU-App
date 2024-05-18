@@ -56,3 +56,11 @@ fun fetchFindBoard( arduino: String, pwd:String, onFailure: () -> Unit, onSucces
         })
 
 }
+
+fun cancelEvent( request: Request){
+
+    val gson = Gson()
+    putRequest("$URL/rest/boards/arduino01/user", onFailure = { }, onSuccess = {}, requestBody = gson.toJson(request))
+
+
+}

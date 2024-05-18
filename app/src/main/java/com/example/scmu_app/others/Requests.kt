@@ -63,3 +63,30 @@ fun getRequest(
         }
     })
 }
+fun putRequest(
+    endpoint: String,
+    requestBody: String,
+    onFailure: (exception: IOException) -> Unit,
+    onSuccess: (response: Response) -> Unit
+) {
+
+    val client = OkHttpClient()
+    val mediaType = "application/json; charset=utf-8".toMediaType()
+
+    val requestBuilder = Request.Builder()
+        .url(endpoint)
+        .put(requestBody.toRequestBody(mediaType))
+
+    val request = requestBuilder.build()
+    client.newCall(request).enqueue(object : Callback {
+        override fun onFailure(call: Call, e: IOException) {
+            onFailure(e)
+        }
+
+        override fun onResponse(call: Call, response: Response) {
+            onSuccess(response)
+        }
+    })
+
+
+}

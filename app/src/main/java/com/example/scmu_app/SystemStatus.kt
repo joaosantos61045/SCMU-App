@@ -66,6 +66,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.style.TextAlign
 import com.example.scmu_app.others.Board
+import com.example.scmu_app.others.Request
+import com.example.scmu_app.others.cancelEvent
 import com.example.scmu_app.ui.theme.darkGreen
 
 
@@ -89,22 +91,27 @@ class SystemStatus : ComponentActivity() {
 fun PreSystemStatusContent() {
     val showLoading = remember { mutableStateOf(true) }
     val boardInfo: MutableState<BoardInfo?> = remember { mutableStateOf(null) }
+    var sampleProg=remember { mutableStateOf(0) }
+   LaunchedEffect(Unit) {
 
-    LaunchedEffect(Unit) {
-        while (true) {
-            fetchBoardInfo(
-                onFailure = {},
-                onSuccess = {
-                    showLoading.value = false
-                    boardInfo.value = it
-                }
-            )
-            delay(1000)
-        }
+    while (true) {
+        fetchBoardInfo(
+            onFailure = {},
+            onSuccess = {
+                showLoading.value = false
+                boardInfo.value = it
+            }
+        )
+        delay(1000)
+        if(sampleProg.value>100)
+            sampleProg.value=0
+        sampleProg.value++
     }
+   }
+
 
     CreateDefaultScaffold(showLoading.value) {
-        SystemStatusContent(boardInfo)
+        SystemStatusContent(boardInfo,sampleProg.value)
     }
 }
 
@@ -112,7 +119,7 @@ fun PreSystemStatusContent() {
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SystemStatusContent(boardInfo: MutableState<BoardInfo?>) {
+fun SystemStatusContent(boardInfo: MutableState<BoardInfo?>,sampleProg:Int) {
 
     val context = LocalContext.current
     val mintGreen = Color(0xffbff4d2)
@@ -227,11 +234,13 @@ fun SystemStatusContent(boardInfo: MutableState<BoardInfo?>) {
                                     val teoricExecTime = it.board.duration * 60
                                     val actuallyExecTime =
                                         it.events.get(it.events.size - 1).executionTime
-                                    val percentDone= (actuallyExecTime*100/teoricExecTime).toInt()
+                                  //  val percentDone= (actuallyExecTime*100/teoricExecTime)
+
                                     StatusItem(
                                         status = it.board.getStates(),
-                                        event = (if (it.board.isOnline()) "Online" else "Offline"),
-                                        progress= percentDone,
+                                        event = (if (it.board.isOnline()) dateToStandardFormat(
+                                            getDateTime( it.board.hourToStart.toLong()*60)) else "Offline"),
+                                        progress= sampleProg,//TODO TROCAR POR percentdone
                                        board=it.board
                                     )
 
@@ -358,18 +367,26 @@ fun StatusItem(status: String, event: String,progress:Int,board: Board) {
             Text(
                 text = "Status: $status",
                 color = Color.Black,
+                style = androidx.compose.ui.text.TextStyle(
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black
+                ),
                 modifier = Modifier.padding(bottom = 8.dp)
             )
-            if(board.state==0)
+
+          /*  if(board.state==0)// TODO tirar comentario
             showProgress(progress)
             else if(board.state==1)
-                showProgress(score = 101)
+                showProgress(score = 101)*/
+            showProgress(progress) //TODO
             Text(
-                text = "Next event in: $event",
+                text = "Next event : $event",
                 color = Color.Black,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
         }
+        if(board.state<2)
         IconButton(
 
             onClick = { showDialog.value = true },
@@ -416,11 +433,13 @@ fun StatusItem(status: String, event: String,progress:Int,board: Board) {
             },
             confirmButton = {
                 Button(colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Red
+                    containerColor = darkGreen
                 ),
                     onClick = {
 
                         showDialog.value = false
+                         cancelEvent(Request())
+
                     }) {
 
                     Text("Cancel")
@@ -480,13 +499,13 @@ fun showProgress(score:Int) {
             elevation = null,
         ) {
             Text(
-                text = (score ).toString()+if(score<=100)"%" else "",
+                text = if(score<=100) (score ).toString()+"%" else "Paused",
                 modifier = Modifier
                     .clip(shape = RoundedCornerShape(23.dp))
                     .fillMaxHeight(0.87f)
                     .fillMaxWidth()
                     .padding(7.dp),
-                color = mintGreen,
+                color = Color.Black,
                 textAlign = TextAlign.Center
             )
         }

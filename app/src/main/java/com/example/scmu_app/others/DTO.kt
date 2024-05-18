@@ -17,11 +17,11 @@ data class Board(
     val duration: Int,
     val hourToStart: Int,
     val rotation: List<Boolean>,
-    val state: Int,
+    var state: Int,
     val currentState: Int,
     val lastUpdate: Long,
 
-) {
+    ) {
    fun isOnline():Boolean{return System.currentTimeMillis()/1000 - lastUpdate < 20  }
     fun getStates(): String {
         val statusList = listOf("Running", "Paused", "Waiting")
@@ -59,4 +59,8 @@ data class TimeLine(
 data class BoardInfo(
     val board: Board,
     val events: List<Event>
+)
+
+data class Request(
+    val state: Int=2
 )
