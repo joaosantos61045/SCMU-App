@@ -65,6 +65,7 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended:1.5.1")
     implementation("com.squareup.okhttp3:okhttp:4.9.1")
     implementation("com.google.code.gson:gson:2.8.8")
+    implementation("androidx.compose.material:material:1.5.4")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

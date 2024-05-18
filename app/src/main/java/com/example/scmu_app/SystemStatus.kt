@@ -44,6 +44,29 @@ import com.example.scmu_app.ui.theme.titleExtraLarge
 import kotlinx.coroutines.delay
 import java.time.format.TextStyle
 import java.util.Locale
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.ButtonDefaults.buttonColors
+
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+
+import androidx.compose.runtime.remember
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.text.style.TextAlign
+import com.example.scmu_app.others.Board
+import com.example.scmu_app.ui.theme.darkGreen
 
 
 class SystemStatus : ComponentActivity() {
@@ -201,10 +224,15 @@ fun SystemStatusContent(boardInfo: MutableState<BoardInfo?>) {
                             ) {
 
                                 boardInfo.value?.let {
-
+                                    val teoricExecTime = it.board.duration * 60
+                                    val actuallyExecTime =
+                                        it.events.get(it.events.size - 1).executionTime
+                                    val percentDone= (actuallyExecTime*100/teoricExecTime).toInt()
                                     StatusItem(
                                         status = it.board.getStates(),
-                                        event = (if (it.board.isOnline()) "Online" else "Offline")
+                                        event = (if (it.board.isOnline()) "Online" else "Offline"),
+                                        progress= percentDone,
+                                       board=it.board
                                     )
 
                                 }
@@ -291,7 +319,8 @@ fun HistoryItem(item: Event) {
             Column(
                 horizontalAlignment = Alignment.End,
                 verticalArrangement = Arrangement.Center,
-                modifier = Modifier.fillMaxWidth()) {
+                modifier = Modifier.fillMaxWidth()
+            ) {
                 Text(
                     color = if (hasEvent) Color.White else Color.Black,
                     fontSize = 16.sp,
@@ -306,7 +335,7 @@ fun HistoryItem(item: Event) {
 }
 
 @Composable
-fun StatusItem(status: String, event: String) {
+fun StatusItem(status: String, event: String,progress:Int,board: Board) {
     val darkGreen = Color(0xFF306044)
     val context = LocalContext.current
     val showDialog = remember { mutableStateOf(false) }
@@ -331,6 +360,10 @@ fun StatusItem(status: String, event: String) {
                 color = Color.Black,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
+            if(board.state==0)
+            showProgress(progress)
+            else if(board.state==1)
+                showProgress(score = 101)
             Text(
                 text = "Next event in: $event",
                 color = Color.Black,
@@ -397,3 +430,70 @@ fun StatusItem(status: String, event: String) {
             )
     }
 }
+
+
+@Composable
+fun showProgress(score:Int) {
+
+
+    val gradient = Brush.linearGradient(
+        listOf(
+           Color.White,
+            swampGreen
+        )
+    )
+
+
+    val progressFactor by remember(score) {
+        mutableStateOf(score * 0.01f)
+    }
+
+    Row(
+        modifier = Modifier
+            .padding(8.dp)
+            .width(200.dp)
+            .height(45.dp)
+            .border(
+                width = 4.dp,
+                color = darkGreen,
+                shape = RoundedCornerShape(50.dp)
+            )
+            .clip(
+                RoundedCornerShape(
+                    topStartPercent = 50,
+                    topEndPercent = 50,
+                    bottomEndPercent = 50,
+                    bottomStartPercent = 50
+                )
+            )
+            .background(Color.Transparent),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+
+        Button(
+            contentPadding = PaddingValues(1.dp),
+            onClick = { },
+            modifier = Modifier
+                .fillMaxWidth(progressFactor)
+                .background(brush = gradient),
+            enabled = false,
+            elevation = null,
+        ) {
+            Text(
+                text = (score ).toString()+if(score<=100)"%" else "",
+                modifier = Modifier
+                    .clip(shape = RoundedCornerShape(23.dp))
+                    .fillMaxHeight(0.87f)
+                    .fillMaxWidth()
+                    .padding(7.dp),
+                color = mintGreen,
+                textAlign = TextAlign.Center
+            )
+        }
+
+
+
+    }
+
+}
+
