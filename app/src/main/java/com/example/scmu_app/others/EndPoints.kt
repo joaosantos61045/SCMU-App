@@ -29,7 +29,7 @@ fun fetchBoardInfo( onFailure: () -> Unit, onSuccess: (BoardInfo) -> Unit) {
 
     val gson = Gson()
     getRequest(
-        "$URL/rest/boards/arduino01/info?start=1715911400&end=1719028000",
+        "$URL/rest/boards/arduino01/info?days=7",
         onFailure = {
             onFailure()
         },
@@ -57,10 +57,10 @@ fun fetchFindBoard( arduino: String, pwd:String, onFailure: () -> Unit, onSucces
 
 }
 
-fun cancelEvent( request: Request){
+fun cancelEvent( status: Int){
 
     val gson = Gson()
-    putRequest("$URL/rest/boards/arduino01/user", onFailure = { }, onSuccess = {}, requestBody = gson.toJson(request))
+    putRequest("$URL/rest/boards/arduino01/request?request=$status", onFailure = { }, onSuccess = {}, requestBody =null)
 
 
 }

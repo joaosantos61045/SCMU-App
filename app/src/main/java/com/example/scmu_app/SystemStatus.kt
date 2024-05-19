@@ -56,7 +56,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.ButtonDefaults.buttonColors
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -66,7 +65,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.style.TextAlign
 import com.example.scmu_app.others.Board
-import com.example.scmu_app.others.Request
 import com.example.scmu_app.others.cancelEvent
 import com.example.scmu_app.ui.theme.darkGreen
 
@@ -103,9 +101,9 @@ fun PreSystemStatusContent() {
             }
         )
         delay(1000)
-        if(sampleProg.value>100)
+        /*if(sampleProg.value>100)
             sampleProg.value=0
-        sampleProg.value++
+        sampleProg.value++*/
     }
    }
 
@@ -232,15 +230,19 @@ fun SystemStatusContent(boardInfo: MutableState<BoardInfo?>,sampleProg:Int) {
 
                                 boardInfo.value?.let {
                                     val teoricExecTime = it.board.duration * 60
-                                    val actuallyExecTime =
-                                        it.events.get(it.events.size - 1).executionTime
-                                  //  val percentDone= (actuallyExecTime*100/teoricExecTime)
+                                    val actuallyExecTime = it.events[it.events.size - 1].executionTime
+                                    val percentDone= (actuallyExecTime*100/(teoricExecTime+1))
+
+                                    Text(actuallyExecTime.toString(), color = Color.Black)
+                                    Text(it.events[it.events.size - 1].getStates(), color = Color.Black)
+                                    Text(it.events[it.events.size - 1].end.toString(), color = Color.Black)
+                                    Text(teoricExecTime.toString(), color = Color.Black)
 
                                     StatusItem(
                                         status = it.board.getStates(),
                                         event = (if (it.board.isOnline()) dateToStandardFormat(
                                             getDateTime( it.board.hourToStart.toLong()*60)) else "Offline"),
-                                        progress= sampleProg,//TODO TROCAR POR percentdone
+                                        progress= percentDone,//TODO TROCAR POR percentdone
                                        board=it.board
                                     )
 
@@ -375,18 +377,18 @@ fun StatusItem(status: String, event: String,progress:Int,board: Board) {
                 modifier = Modifier.padding(bottom = 8.dp)
             )
 
-          /*  if(board.state==0)// TODO tirar comentario
+           if(board.currentState==0)// TODO tirar comentario
             showProgress(progress)
-            else if(board.state==1)
-                showProgress(score = 101)*/
-            showProgress(progress) //TODO
+            else if(board.currentState==1)
+                showProgress(score = 101)
+            //showProgress(progress) //TODO
             Text(
                 text = "Next event : $event",
                 color = Color.Black,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
         }
-        if(board.state<2)
+        if(board.currentState<2)
         IconButton(
 
             onClick = { showDialog.value = true },
@@ -438,7 +440,7 @@ fun StatusItem(status: String, event: String,progress:Int,board: Board) {
                     onClick = {
 
                         showDialog.value = false
-                         cancelEvent(Request())
+                         cancelEvent(2)
 
                     }) {
 

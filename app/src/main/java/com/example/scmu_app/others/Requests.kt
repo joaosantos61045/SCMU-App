@@ -65,7 +65,7 @@ fun getRequest(
 }
 fun putRequest(
     endpoint: String,
-    requestBody: String,
+    requestBody: String?,
     onFailure: (exception: IOException) -> Unit,
     onSuccess: (response: Response) -> Unit
 ) {
@@ -73,9 +73,12 @@ fun putRequest(
     val client = OkHttpClient()
     val mediaType = "application/json; charset=utf-8".toMediaType()
 
+    val body =
+        requestBody?.toRequestBody(mediaType) ?: RequestBody.create(null, ByteArray(0))
+
     val requestBuilder = Request.Builder()
         .url(endpoint)
-        .put(requestBody.toRequestBody(mediaType))
+        .put(body)
 
     val request = requestBuilder.build()
     client.newCall(request).enqueue(object : Callback {
