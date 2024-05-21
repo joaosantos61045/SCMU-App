@@ -288,7 +288,12 @@ fun SystemItem(name: String, id: String) {
             .padding(10.dp)
             .clickable {
                 // Navigate to detail screen when clicked
+
                 val intent = Intent(context, SystemStatus::class.java)
+                    .apply {
+                        putExtra("systemName", name)
+                        putExtra("systemId", id)
+                    }
                 context.startActivity(intent)
             }
     ) {

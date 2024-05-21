@@ -26,7 +26,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
@@ -44,12 +43,7 @@ import com.example.scmu_app.ui.theme.titleExtraLarge
 import kotlinx.coroutines.delay
 import java.time.format.TextStyle
 import java.util.Locale
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -62,9 +56,6 @@ import androidx.compose.runtime.LaunchedEffect
 
 import androidx.compose.runtime.remember
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.text.style.TextAlign
-import com.example.scmu_app.others.Board
 import com.example.scmu_app.others.cancelEvent
 import com.example.scmu_app.ui.theme.darkGreen
 
@@ -72,13 +63,14 @@ import com.example.scmu_app.ui.theme.darkGreen
 class SystemStatus : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
-    @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
+
+            val systemName = intent.getStringExtra("systemName")!!
             SCMUAppTheme {
-                PreSystemStatusContent()
+                PreSystemStatusContent(systemName)
             }
         }
     }
@@ -86,30 +78,39 @@ class SystemStatus : ComponentActivity() {
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun PreSystemStatusContent() {
+fun PreSystemStatusContent(systemName: String) {
     val showLoading = remember { mutableStateOf(true) }
     val boardInfo: MutableState<BoardInfo?> = remember { mutableStateOf(null) }
-    var sampleProg=remember { mutableStateOf(0) }
-   LaunchedEffect(Unit) {
+    val currentTime = remember { mutableStateOf(0L) }
+    val state = remember { mutableStateOf(0) }
 
-    while (true) {
-        fetchBoardInfo(
-            onFailure = {},
-            onSuccess = {
-                showLoading.value = false
-                boardInfo.value = it
-            }
-        )
-        delay(1000)
-        /*if(sampleProg.value>100)
-            sampleProg.value=0
-        sampleProg.value++*/
+    LaunchedEffect(Unit) {
+
+        while (true) {
+            fetchBoardInfo(
+                onFailure = {},
+                onSuccess = {
+                    showLoading.value = false
+                    boardInfo.value = it
+
+                    val bInfo = boardInfo.value!!
+
+                    if(state.value < bInfo.board.currentState) {
+                        state.value = bInfo.board.currentState
+
+                        if (bInfo.events.isNotEmpty())
+                            currentTime.value = bInfo.board.currentDate- bInfo.events[bInfo.events.size - 1].start
+
+                    }
+                }
+            )
+            delay(1000)
+        }
     }
-   }
 
 
     CreateDefaultScaffold(showLoading.value) {
-        SystemStatusContent(boardInfo,sampleProg.value)
+        SystemStatusContent(boardInfo, systemName)
     }
 }
 
@@ -117,13 +118,9 @@ fun PreSystemStatusContent() {
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SystemStatusContent(boardInfo: MutableState<BoardInfo?>,sampleProg:Int) {
+fun SystemStatusContent(boardInfo: MutableState<BoardInfo?>, systemName: String) {
 
     val context = LocalContext.current
-    val mintGreen = Color(0xffbff4d2)
-    val darkGreen = Color(0xFF306044)
-    val bgGreen = Color(0xFF8CBF9F)
-    val swampGreen = Color(0xFF5D8E70)
     val showDialog = remember { mutableStateOf(false) }
 
     Column(
@@ -180,30 +177,6 @@ fun SystemStatusContent(boardInfo: MutableState<BoardInfo?>,sampleProg:Int) {
                         color = Color.White,
                         modifier = Modifier.padding(20.dp, 3.dp, 30.dp, 3.dp)
                     )
-                    IconButton(
-
-
-                        onClick = {
-                            val intent = Intent(context, EditSystem::class.java)
-
-                            context.startActivity(intent)
-                        },
-                        modifier = Modifier
-                            .size(40.dp)
-                            .offset(-10.dp, 5.dp)
-                            .background(swampGreen, RoundedCornerShape(15.dp))
-
-
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Settings,
-                            contentDescription = "Settings",
-                            modifier = Modifier.size(80.dp),
-                            tint = Color.White,
-
-
-                            )
-                    }
                 }
 
 
@@ -229,27 +202,30 @@ fun SystemStatusContent(boardInfo: MutableState<BoardInfo?>,sampleProg:Int) {
                             ) {
 
                                 boardInfo.value?.let {
-                                    val teoricExecTime = it.board.duration * 60
-                                    val actuallyExecTime = it.events[it.events.size - 1].executionTime
-                                    val percentDone= (actuallyExecTime*100/(teoricExecTime+1))
-
-                                    Text(actuallyExecTime.toString(), color = Color.Black)
-                                    Text(it.events[it.events.size - 1].getStates(), color = Color.Black)
-                                    Text(it.events[it.events.size - 1].end.toString(), color = Color.Black)
-                                    Text(teoricExecTime.toString(), color = Color.Black)
-
-                                    StatusItem(
-                                        status = it.board.getStates(),
-                                        event = (if (it.board.isOnline()) dateToStandardFormat(
-                                            getDateTime( it.board.hourToStart.toLong()*60)) else "Offline"),
-                                        progress= percentDone,//TODO TROCAR POR percentdone
-                                       board=it.board
-                                    )
-
+                                    InfoItem(it, systemName)
                                 }
 
 
 
+                                Spacer(modifier = Modifier.size(0.dp, 40.dp))
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.size(0.dp, 40.dp))
+                    BoxWithConstraints {
+                        createTile("Event:")
+                        Row(
+                            Modifier
+                                .offset(0.dp, 20.dp)
+                        ) {
+                            Column(
+                                Modifier
+                                    .background(mintGreen)
+                                    .offset(0.dp, 30.dp)
+                            ) {
+                                boardInfo.value?.let {
+                                    StatusItem(it)
+                                }
                                 Spacer(modifier = Modifier.size(0.dp, 40.dp))
                             }
                         }
@@ -268,20 +244,16 @@ fun SystemStatusContent(boardInfo: MutableState<BoardInfo?>,sampleProg:Int) {
                             ) {
 
                                 boardInfo.value?.let {
-
                                     for (item in it.events.reversed()) {
                                         if (item.eventState != 2)//TODO MAYBE?
                                             HistoryItem(item)
-
                                     }
-
                                 }
 
                                 Spacer(modifier = Modifier.size(0.dp, 40.dp))
                             }
                         }
                     }
-
                 }
             }
         }
@@ -345,11 +317,10 @@ fun HistoryItem(item: Event) {
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun StatusItem(status: String, event: String,progress:Int,board: Board) {
-    val darkGreen = Color(0xFF306044)
+fun InfoItem(boardInfo: BoardInfo, systemName: String) {
     val context = LocalContext.current
-    val showDialog = remember { mutableStateOf(false) }
 
     Row(
         modifier = Modifier.padding(0.dp),
@@ -367,44 +338,131 @@ fun StatusItem(status: String, event: String,progress:Int,board: Board) {
             modifier = Modifier.weight(1f)
         ) {
             Text(
-                text = "Status: $status",
+                text = systemName,
+                color = Color.Black,
+                style = androidx.compose.ui.text.TextStyle(
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black
+                )
+            )
+
+            Row() {
+                Text(
+                    text = "   Status: ",
+                    color = Color.Black,
+                    style = androidx.compose.ui.text.TextStyle(
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black
+                    ),
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                Text(
+                    text = if (boardInfo.board.isOnline()) "Online" else "Offline",
+                    color = if (boardInfo.board.isOnline()) swampGreen else Color.Red,
+                    style = androidx.compose.ui.text.TextStyle(
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black
+                    ),
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+            }
+
+        }
+
+        Column(
+            modifier = Modifier.padding(end = 15.dp)
+        ) {
+
+            IconButton(
+                onClick = {
+                    val intent = Intent(context, EditSystem::class.java)
+                    context.startActivity(intent)
+                },
+                modifier = Modifier
+                    .size(50.dp)
+                    .background(swampGreen, RoundedCornerShape(15.dp))
+                    .zIndex(100f)
+
+
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Settings,
+                    contentDescription = "Settings",
+                    modifier = Modifier.size(35.dp),
+                    tint = Color.White,
+
+
+                    )
+            }
+        }
+    }
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+fun StatusItem(boardInfo: BoardInfo) {
+    val showDialog = remember { mutableStateOf(false) }
+    val shouldShow = boardInfo.board.currentState < 2
+
+    Row(
+        modifier = Modifier.padding(top = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+
+        Column(
+            modifier = Modifier.weight(1f).padding(start= 15.dp)
+        ) {
+            Text(
+                text = "Status: ${boardInfo.board.getStates()}",
                 color = Color.Black,
                 style = androidx.compose.ui.text.TextStyle(
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.Black
                 ),
-                modifier = Modifier.padding(bottom = 8.dp)
+                modifier = Modifier
             )
 
-           if(board.currentState==0)// TODO tirar comentario
-            showProgress(progress)
-            else if(board.currentState==1)
-                showProgress(score = 101)
-            //showProgress(progress) //TODO
+            if (shouldShow) {
+                val lastEvent = boardInfo.events[boardInfo.events.size - 1]
+                val pausedTime = boardInfo.board.currentDate -lastEvent.pausedTime
+                val currentTime = boardInfo.board.currentDate - lastEvent.start
+                val teoricExecTime = boardInfo.board.duration * 60
+                val percentDone = Math.min(1f, currentTime / (teoricExecTime.toFloat()))
+
+                Text(pausedTime.toString(), color =  Color.Black)
+                Text("$currentTime/$teoricExecTime $percentDone%", color =  Color.Black)
+                showProgress(percentDone)
+            }
+
             Text(
-                text = "Next event : $event",
+                text = "    Next event : ${dateToStandardFormat(getDateTime(boardInfo.board.hourToStart.toLong() * 60))}",
                 color = Color.Black,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
+
         }
-        if(board.currentState<2)
-        IconButton(
 
-            onClick = { showDialog.value = true },
-            modifier = Modifier
-                .size(48.dp)
-                .offset(-20.dp, 0.dp)
-                .background(shape = RoundedCornerShape(12.dp), color = swampGreen)
-
+        Column(
+            modifier = Modifier.padding(end = 15.dp)
         ) {
-            Icon(
-                imageVector = Icons.Default.Close,
-                contentDescription = "Close",
-                tint = Color.White,
+            if (shouldShow)
 
-
-                )
+                IconButton(
+                    onClick = { showDialog.value = true },
+                    modifier = Modifier
+                        .size(50.dp)
+                        .background(shape = RoundedCornerShape(15.dp), color = swampGreen)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Close",
+                        tint = Color.White,
+                        modifier = Modifier.size(35.dp))
+                }
         }
     }
     if (showDialog.value) {
@@ -440,7 +498,7 @@ fun StatusItem(status: String, event: String,progress:Int,board: Board) {
                     onClick = {
 
                         showDialog.value = false
-                         cancelEvent(2)
+                        cancelEvent(2)
 
                     }) {
 
@@ -454,67 +512,34 @@ fun StatusItem(status: String, event: String,progress:Int,board: Board) {
 
 
 @Composable
-fun showProgress(score:Int) {
+fun showProgress(percentage: Float) {
 
+    val height = 30;
+    val maxWidth = 250;
 
-    val gradient = Brush.linearGradient(
-        listOf(
-           Color.White,
-            swampGreen
-        )
-    )
-
-
-    val progressFactor by remember(score) {
-        mutableStateOf(score * 0.01f)
-    }
-
-    Row(
-        modifier = Modifier
-            .padding(8.dp)
-            .width(200.dp)
-            .height(45.dp)
-            .border(
-                width = 4.dp,
-                color = darkGreen,
-                shape = RoundedCornerShape(50.dp)
-            )
-            .clip(
-                RoundedCornerShape(
-                    topStartPercent = 50,
-                    topEndPercent = 50,
-                    bottomEndPercent = 50,
-                    bottomStartPercent = 50
-                )
-            )
-            .background(Color.Transparent),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-
-        Button(
-            contentPadding = PaddingValues(1.dp),
-            onClick = { },
+    BoxWithConstraints {
+        Row(
             modifier = Modifier
-                .fillMaxWidth(progressFactor)
-                .background(brush = gradient),
-            enabled = false,
-            elevation = null,
+                .padding(4.dp)
+                .width(maxWidth.dp)
+                .height(height.dp)
+                .background(swampGreen, RoundedCornerShape(50.dp))
+                .clip(RoundedCornerShape(50)),
+            verticalAlignment = Alignment.CenterVertically
+        ) {}
+
+        Row(
+            modifier = Modifier
+                .padding(4.dp)
+                .width((maxWidth * percentage).dp)
+                .height(height.dp)
+                .background(darkGreen, RoundedCornerShape(50.dp)),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = if(score<=100) (score ).toString()+"%" else "Paused",
-                modifier = Modifier
-                    .clip(shape = RoundedCornerShape(23.dp))
-                    .fillMaxHeight(0.87f)
-                    .fillMaxWidth()
-                    .padding(7.dp),
-                color = Color.Black,
-                textAlign = TextAlign.Center
-            )
+
         }
-
-
-
     }
+
 
 }
 

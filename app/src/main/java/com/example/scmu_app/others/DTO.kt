@@ -19,16 +19,15 @@ data class Board(
     val rotation: List<Boolean>,
     var state: Int,
     val currentState: Int,
+    val currentDate: Long,
     val lastUpdate: Long,
 
     ) {
    fun isOnline():Boolean{return System.currentTimeMillis()/1000 - lastUpdate < 10  }
     fun getStates(): String {
         val statusList = listOf("Running", "Paused", "Waiting")
-        return if(isOnline())
-            statusList[currentState]
-        else
-            "Offline"
+        return statusList[currentState]
+
     }
 
 }
