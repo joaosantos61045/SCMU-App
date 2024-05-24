@@ -45,6 +45,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat.startActivity
+import com.example.scmu_app.others.Board
 import com.example.scmu_app.ui.theme.CreateDefaultScaffold
 import com.example.scmu_app.ui.theme.SCMUAppTheme
 import com.example.scmu_app.ui.theme.createTile
@@ -350,16 +351,19 @@ fun ShowManageSystemContent(canDelete: Boolean, sysName: String, sysId: String) 
                                         modifier = Modifier.padding(16.dp)
                                     ) {
 
-                                        Button(onClick = {
-                                            val intent = Intent(context, EditSystem::class.java)
+                                        Button(
+                                            onClick = {
+                                                val intent = Intent(context, EditSystem::class.java)
 
-                                            context.startActivity(intent)
-                                        },
-                                           modifier= Modifier.size(400.dp,50.dp),
-                                            colors= ButtonDefaults.buttonColors(darkGreen)) {
+                                                context.startActivity(intent)
+                                            },
+                                            modifier = Modifier.size(400.dp, 50.dp),
+                                            colors = ButtonDefaults.buttonColors(darkGreen)
+                                        ) {
                                             Text(
                                                 fontSize = 22.sp,
-                                                text = "Add System")
+                                                text = "Add System"
+                                            )
                                         }
 
                                     }
@@ -397,7 +401,8 @@ fun ShowManageSystemContent(canDelete: Boolean, sysName: String, sysId: String) 
             dismissButton = {
                 Button(
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = darkGreen),
+                        containerColor = darkGreen
+                    ),
                     onClick = { showDialog.value = false }) {
                     Text("Cancel")
                 }
@@ -422,6 +427,7 @@ fun ShowManageSystemContent(canDelete: Boolean, sysName: String, sysId: String) 
 }
 
 
+
 @Composable
 fun ToggleButton(text: String) {
     var isChecked by remember { mutableStateOf(false) }
@@ -441,7 +447,7 @@ fun ToggleButton(text: String) {
         )
         Switch(
             colors = SwitchDefaults.colors(
-                checkedTrackColor= darkGreen
+                checkedTrackColor = darkGreen
             ),
 
             checked = isChecked,
@@ -464,7 +470,8 @@ fun DaySelectionRow() {
             DayButton(
                 day = daysOfWeek[index],
                 // isSelected = index in selectedIndices,
-                onToggle = { toggleDaySelection(index, selectedIndices) }
+                onToggle = { toggleDaySelection(index, selectedIndices) },
+                isSelect = index in selectedIndices
             )
         }
     }
@@ -473,9 +480,10 @@ fun DaySelectionRow() {
 @Composable
 fun DayButton(
     day: String,
-    onToggle: () -> Unit
+    onToggle: () -> Unit,
+    isSelect: Boolean
 ) {
-    var isSelected by remember { mutableStateOf(false) }
+    var isSelected by remember { mutableStateOf(isSelect) }
 
     Button(
         onClick = {
@@ -537,7 +545,7 @@ fun TextBox(label: String, value: String = "", password: Boolean = false) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Dropdown(label: String, options: List<String>, initialValue: String) {
+fun Dropdown(label: String, options: List<String>, initialValue: String): Int {
 
     var expanded by remember { mutableStateOf(false) }
     var selectedOption by remember { mutableStateOf(initialValue) }
@@ -574,6 +582,7 @@ fun Dropdown(label: String, options: List<String>, initialValue: String) {
             }
         }
     }
+    return selectedOption.toInt()
 }
 
 @Composable

@@ -1,8 +1,8 @@
 package com.example.scmu_app.others
 
-data class User(
+data class User (
     val id: String,
-    val boards: MutableList<UserBoard>
+    var boards: MutableList<UserBoard>
 )
 
 data class UserBoard(
@@ -12,15 +12,15 @@ data class UserBoard(
 )
 
 data class Board(
-    val id: String,
-    val active: Boolean,
-    val duration: Int,
-    val hourToStart: Int,
-    val rotation: List<Boolean>,
+    var id: String,
+    var active: Boolean,
+    var duration: Int,
+    var hourToStart: Int,
+    var rotation: MutableList<Boolean>,
     var state: Int,
-    val currentState: Int,
-    val currentDate: Long,
-    val lastUpdate: Long,
+    var currentState: Int,
+    var currentDate: Long,
+    var lastUpdate: Long,
 
     ) {
    fun isOnline():Boolean{return System.currentTimeMillis()/1000 - lastUpdate < 10  }

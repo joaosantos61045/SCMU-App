@@ -56,8 +56,10 @@ import androidx.compose.runtime.LaunchedEffect
 
 import androidx.compose.runtime.remember
 import androidx.compose.ui.draw.clip
+import com.example.scmu_app.others.User
 import com.example.scmu_app.others.cancelEvent
 import com.example.scmu_app.ui.theme.darkGreen
+import com.google.gson.Gson
 
 
 class SystemStatus : ComponentActivity() {
@@ -68,9 +70,12 @@ class SystemStatus : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
 
-            val systemName = intent.getStringExtra("systemName")!!
+
             SCMUAppTheme {
-                PreSystemStatusContent(systemName)
+                val user: User = Gson().fromJson(intent.getStringExtra("user"), User::class.java)
+                val systemName = intent.getStringExtra("systemName")!!
+                val sysId=intent.getStringExtra("systemId")!!
+                PreSystemStatusContent(systemName,user,sysId)
             }
         }
     }
@@ -78,7 +83,7 @@ class SystemStatus : ComponentActivity() {
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun PreSystemStatusContent(systemName: String) {
+fun PreSystemStatusContent(systemName: String, user: User, sysId: String) {
     val showLoading = remember { mutableStateOf(true) }
     val boardInfo: MutableState<BoardInfo?> = remember { mutableStateOf(null) }
     val currentTime = remember { mutableStateOf(0L) }
@@ -110,7 +115,8 @@ fun PreSystemStatusContent(systemName: String) {
 
 
     CreateDefaultScaffold(showLoading.value) {
-        SystemStatusContent(boardInfo, systemName)
+
+        SystemStatusContent(boardInfo, systemName,user,sysId)
     }
 }
 
@@ -118,7 +124,12 @@ fun PreSystemStatusContent(systemName: String) {
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SystemStatusContent(boardInfo: MutableState<BoardInfo?>, systemName: String) {
+fun SystemStatusContent(
+    boardInfo: MutableState<BoardInfo?>,
+    systemName: String,
+    user: User,
+    sysId: String
+) {
 
     val context = LocalContext.current
     val showDialog = remember { mutableStateOf(false) }
@@ -202,7 +213,7 @@ fun SystemStatusContent(boardInfo: MutableState<BoardInfo?>, systemName: String)
                             ) {
 
                                 boardInfo.value?.let {
-                                    InfoItem(it, systemName)
+                                    InfoItem(it, systemName, user,sysId)
                                 }
 
 
@@ -319,7 +330,7 @@ fun HistoryItem(item: Event) {
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun InfoItem(boardInfo: BoardInfo, systemName: String) {
+fun InfoItem(boardInfo: BoardInfo, systemName: String,user: User,sysId:String) {
     val context = LocalContext.current
 
     Row(
@@ -378,7 +389,12 @@ fun InfoItem(boardInfo: BoardInfo, systemName: String) {
 
             IconButton(
                 onClick = {
-                    val intent = Intent(context, EditSystem::class.java)
+                    val intent = Intent(context, EditSystem::class.java).apply{
+                        putExtra("user", Gson().toJson(user))
+                        putExtra("systemName", systemName)
+                        putExtra("systemId", sysId)
+                    }
+
                     context.startActivity(intent)
                 },
                 modifier = Modifier

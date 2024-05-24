@@ -48,6 +48,7 @@ import com.example.scmu_app.ui.theme.mintGreen
 import com.example.scmu_app.ui.theme.titleExtraLarge
 import com.example.scmu_app.ui.theme.titleSmall
 import com.example.scmu_app.ui.theme.titleMedium
+import com.google.gson.Gson
 
 class MainScreen : ComponentActivity() {
 
@@ -82,6 +83,7 @@ fun PreMain(contextResolver: ContentResolver) {
             user.value = it
         }
     )
+
 
     CreateDefaultScaffold(showLoading.value) {
         ShowMain(user, showDialog, showNameDialog)
@@ -137,13 +139,14 @@ fun ShowMain(
                             .background(bgGreen)
                             .fillMaxSize()
                     ) {
-                        Spacer(modifier = Modifier.height(20.dp))
+                        Spacer(modifier = Modifier.height(40.dp))
                         LazyColumn(
                             userScrollEnabled = true,
                             modifier = Modifier.padding(bottom = 65.dp)
                         ) {
                             items(user.value.boards) { board ->
-                                SystemItem(name = board.name, id = board.board)
+
+                                SystemItem(name = board.name, id = board.board,user.value)
                             }
                         }
 
@@ -277,9 +280,9 @@ fun SystemNameDialog(showNameDialog: MutableState<Boolean>) {
 }
 
 @Composable
-fun SystemItem(name: String, id: String) {
+fun SystemItem(name: String, id: String,user: User) {
     val context = LocalContext.current
-    Spacer(modifier = Modifier.size(0.dp, 20.dp))
+
     Surface(
         color = mintGreen,
         shape = RoundedCornerShape(15.dp),
@@ -293,12 +296,14 @@ fun SystemItem(name: String, id: String) {
                     .apply {
                         putExtra("systemName", name)
                         putExtra("systemId", id)
+                        putExtra("user", Gson().toJson(user))
                     }
+
                 context.startActivity(intent)
             }
     ) {
 
-        Row(Modifier.padding(10.dp)) {
+        Row(Modifier.padding(5.dp)) {
             Image(
                 painter = painterResource(id = R.drawable.image01),
                 contentDescription = "",
