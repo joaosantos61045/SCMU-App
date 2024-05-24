@@ -321,6 +321,9 @@ fun HistoryItem(item: Event) {
                     text = if (hasEvent) time else item.getStates(),
                     modifier = Modifier
                 )
+                for(e in item.timeLine) {
+                    Text(e.state.toString()+" "+e.duration, color = Color.Black)
+                }
             }
 
         }
