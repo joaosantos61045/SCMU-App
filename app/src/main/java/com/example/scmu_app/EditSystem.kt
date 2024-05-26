@@ -82,7 +82,7 @@ class EditSystem : ComponentActivity() {
                 val sysId=intent.getStringExtra("systemId")!!
                     MyAppContent(user,systemName,sysId)
 
-
+       // user.boards.find { it.board==sysId }
             }
         }
     }//onResume

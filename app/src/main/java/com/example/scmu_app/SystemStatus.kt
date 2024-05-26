@@ -60,6 +60,7 @@ import androidx.compose.ui.draw.clip
 import com.example.scmu_app.others.User
 import com.example.scmu_app.others.cancelEvent
 import com.example.scmu_app.others.formatDuration
+import com.example.scmu_app.others.updateBoard
 import com.example.scmu_app.ui.theme.darkGreen
 import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
@@ -100,10 +101,10 @@ fun PreSystemStatusContent(systemName: String, user: User, sysId: String) {
         val job = scope.launch {
             while (isActive) {
                 if (System.currentTimeMillis() - currentDate.value > 1000) {
-                    Log.w("Test", currentDate.value.toString())
+
                     currentDate.value = System.currentTimeMillis()
 
-                    Log.w("Test", "Fetching")
+
                     fetchBoardInfo(sysId,
                         onFailure = { Log.w("Test", "ERROU") },
                         onSuccess = {
@@ -453,7 +454,7 @@ fun StatusItem(boardInfo: BoardInfo) {
     val targetValue = remember { mutableStateOf(0F) }
     val lastFetch = remember { mutableStateOf(System.currentTimeMillis()) }
     var shouldShow = boardInfo.board.currentState < 2
-
+    var state= remember { mutableStateOf(boardInfo.board.state) }
     Row(
         modifier = Modifier.padding(top = 8.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -474,20 +475,29 @@ fun StatusItem(boardInfo: BoardInfo) {
                 ),
                 modifier = Modifier
             )
+            DisposableEffect(boardInfo, targetValue) {
+                val scope = CoroutineScope(Dispatchers.Main)
 
-            if (shouldShow) {
-
-                LaunchedEffect(boardInfo, targetValue) {
-
-                    while (true) {
+                val job = scope.launch {
+                    while (isActive) {
                         if (boardInfo.board.currentState == 0) {
                             val stepSize = (targetValue.value - lastTime.value) / 5F
                             lastTime.value += stepSize
                         }
+                        if(boardInfo.board.currentState==2)
+                        state.value=boardInfo.board.state
 
                         delay(300)
                     }
                 }
+
+                onDispose {
+                    job.cancel()
+                }
+            }
+
+            if (shouldShow) {
+
 
                 if (boardInfo.board.currentState == 0 && System.currentTimeMillis() - lastFetch.value > 1000) {
                     val lastEvent = boardInfo.events[boardInfo.events.size - 1]
@@ -499,7 +509,7 @@ fun StatusItem(boardInfo: BoardInfo) {
                 val percentDone = Math.min(1f, lastTime.value / (teoricExecTime.toFloat()))
 
                 showProgress(percentDone)
-
+            //shouldShow=boardInfo.board.currentState < 2
             } else
                 lastTime.value = 0F
 
@@ -523,7 +533,8 @@ fun StatusItem(boardInfo: BoardInfo) {
         Column(
             modifier = Modifier.padding(end = 15.dp)
         ) {
-            if (shouldShow)
+
+            if (state.value==-1 && boardInfo.board.currentState!=2)
 
                 IconButton(
                     onClick = {
@@ -576,8 +587,11 @@ fun StatusItem(boardInfo: BoardInfo) {
                     onClick = {
 
                         showDialog.value = false
-                        cancelEvent(2, boardInfo.board.id)
-                        shouldShow=false//TODO ?
+                        state.value=2
+                        boardInfo.board.state=2
+                       // cancelEvent(2, boardInfo.board.id)
+                        updateBoard(boardInfo.board,{},{
+                        })
 
                     }) {
 
