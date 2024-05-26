@@ -62,6 +62,10 @@ import com.example.scmu_app.others.cancelEvent
 import com.example.scmu_app.others.formatDuration
 import com.example.scmu_app.ui.theme.darkGreen
 import com.google.gson.Gson
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 
 
 class SystemStatus : ComponentActivity() {
@@ -88,24 +92,37 @@ fun PreSystemStatusContent(systemName: String, user: User, sysId: String) {
     val showLoading = remember { mutableStateOf(true) }
     val boardInfo: MutableState<BoardInfo?> = remember { mutableStateOf(null) }
     val events = remember { mutableStateOf<MutableList<Event>?>(null) }
+    val currentDate = remember { mutableStateOf(0L) }
 
+    DisposableEffect(Unit) {
+        val scope = CoroutineScope(Dispatchers.Main)
 
-    LaunchedEffect(Unit) {
-        while (true) {
-            Log.w("Test", "Fetching")
-            fetchBoardInfo(sysId,
-                onFailure = { Log.w("Test","ERROU")},
-                onSuccess = {
-                    showLoading.value = false
-                    boardInfo.value = it
-                    boardInfo.value!!.board.lastFetch=System.currentTimeMillis()
+        val job = scope.launch {
+            while (isActive) {
+                if (System.currentTimeMillis() - currentDate.value > 1000) {
+                    Log.w("Test", currentDate.value.toString())
+                    currentDate.value = System.currentTimeMillis()
 
-                    if (events.value == null || boardInfo.value!!.eventsChanged(events.value!!))
-                        events.value = boardInfo.value!!.events
+                    Log.w("Test", "Fetching")
+                    fetchBoardInfo(sysId,
+                        onFailure = { Log.w("Test", "ERROU") },
+                        onSuccess = {
+                            showLoading.value = false
+                            boardInfo.value = it
+                            boardInfo.value!!.board.lastFetch = System.currentTimeMillis()
+
+                            if (events.value == null || boardInfo.value!!.eventsChanged(events.value!!)) {
+                                events.value = boardInfo.value!!.events
+                            }
+                        }
+                    )
                 }
-            )
+                delay(1000)
+            }
+        }
 
-            delay(1000)
+        onDispose {
+            job.cancel()
         }
     }
 
