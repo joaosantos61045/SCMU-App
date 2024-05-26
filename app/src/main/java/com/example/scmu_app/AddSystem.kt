@@ -522,23 +522,24 @@ fun TextBox(label: String, value: String = "", password: Boolean = false) {
         maxLines = 1,
         value = textValue,
         onValueChange = { newText -> textValue = newText },
-        label = { Text(label, style = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.Bold)) },
+        label = { Text(label, style = TextStyle(fontSize = 15.sp, fontWeight = FontWeight.Bold)) },
         colors =
         TextFieldDefaults.colors(
-            focusedContainerColor = Color.White,
+            focusedContainerColor = mintGreen,
             focusedTextColor = Color.Black,
             focusedPlaceholderColor = darkGreen,
             focusedIndicatorColor = darkGreen,
             focusedLabelColor = darkGreen,
-            unfocusedContainerColor = Color.White,
+            unfocusedContainerColor = mintGreen,
             unfocusedTextColor = Color.Black,
             unfocusedPlaceholderColor = darkGreen,
             unfocusedIndicatorColor = darkGreen,
             unfocusedLabelColor = darkGreen,
         ),
+        textStyle = TextStyle(fontSize = 15.sp, fontWeight = FontWeight.Normal),
         modifier = Modifier
-            .padding(horizontal = 16.dp, vertical = 2.dp)
-            .fillMaxWidth(),
+            .padding(horizontal = 16.dp)
+            .fillMaxWidth()
 
         )
 }
