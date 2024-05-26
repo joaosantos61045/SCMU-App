@@ -1,5 +1,8 @@
 package com.example.scmu_app.others
 
+import android.os.Build
+import androidx.annotation.RequiresApi
+
 data class User (
     val id: String,
     var boards: MutableList<UserBoard>
@@ -57,5 +60,21 @@ data class TimeLine(
 
 data class BoardInfo(
     val board: Board,
-    val events: List<Event>
-)
+    val events: MutableList<Event>
+) {
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun eventsChanged(other: MutableList<Event>): Boolean {
+        if(events.size != other.size)
+            return true
+
+        for(i in 0..<events.size) {
+            val thisTime = getDateTime(events[i].start)
+            val otherTime = getDateTime(other[i].start)
+
+            if(thisTime != otherTime)
+                return true
+        }
+
+        return false
+    }
+}
