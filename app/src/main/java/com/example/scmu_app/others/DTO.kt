@@ -25,7 +25,7 @@ data class Board(
     var currentState: Int,
     var currentDate: Long,
     var lastUpdate: Long,
-    @Expose(serialize = false,deserialize = false) var lastFetch: Long
+    @Transient var lastFetch: Long
 
     ) {
    fun isOnline():Boolean{return System.currentTimeMillis()/1000 - lastUpdate < 5  }

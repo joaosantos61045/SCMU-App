@@ -58,7 +58,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.draw.clip
 import com.example.scmu_app.others.User
-import com.example.scmu_app.others.calculateRemainingTime
 import com.example.scmu_app.others.cancelEvent
 import com.example.scmu_app.others.formatDuration
 import com.example.scmu_app.ui.theme.darkGreen
@@ -94,7 +93,7 @@ fun PreSystemStatusContent(systemName: String, user: User, sysId: String) {
     LaunchedEffect(Unit) {
         while (true) {
             Log.w("Test", "Fetching")
-            fetchBoardInfo(
+            fetchBoardInfo(sysId,
                 onFailure = { Log.w("Test","ERROU")},
                 onSuccess = {
                     showLoading.value = false
@@ -436,7 +435,7 @@ fun StatusItem(boardInfo: BoardInfo) {
     val remainingTime = remember { mutableStateOf(0L) }
     val targetValue = remember { mutableStateOf(0F) }
     val lastFetch = remember { mutableStateOf(System.currentTimeMillis()) }
-    val shouldShow = boardInfo.board.currentState < 2
+    var shouldShow = boardInfo.board.currentState < 2
 
     Row(
         modifier = Modifier.padding(top = 8.dp),
@@ -507,7 +506,7 @@ fun StatusItem(boardInfo: BoardInfo) {
         Column(
             modifier = Modifier.padding(end = 15.dp)
         ) {
-            if (shouldShow.value)
+            if (shouldShow)
 
                 IconButton(
                     onClick = {
@@ -550,7 +549,7 @@ fun StatusItem(boardInfo: BoardInfo) {
                         containerColor = Color.LightGray
                     ),
                     onClick = { showDialog.value = false }) {
-                    Text("Cancel", color = Color.White)
+                    Text("Cancel", color = Color.Black)
                 }
             },
             confirmButton = {
@@ -560,8 +559,8 @@ fun StatusItem(boardInfo: BoardInfo) {
                     onClick = {
 
                         showDialog.value = false
-                        cancelEvent(2)
-                        shouldShow.value=false//TODO ?
+                        cancelEvent(2, boardInfo.board.id)
+                        shouldShow=false//TODO ?
 
                     }) {
 

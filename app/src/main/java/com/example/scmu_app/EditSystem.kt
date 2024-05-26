@@ -3,6 +3,7 @@ package com.example.scmu_app
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -107,7 +108,7 @@ fun MyAppContent(user: User, systemName: String, sysId: String) {
 
         // Only show content after data has been fetched
 
-            ShowEditSystemContent(true,systemName , sysId, board,user,showLoading)
+            ShowEditSystemContent(systemName , sysId, board,user,showLoading)
 
     }
 }
@@ -115,7 +116,6 @@ fun MyAppContent(user: User, systemName: String, sysId: String) {
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun ShowEditSystemContent(
-    canDelete: Boolean,
     sysName: String,
     sysId: String,
     board: Board?,
@@ -271,7 +271,7 @@ fun ShowEditSystemContent(
                                     )
 
                                     if (board != null) {
-                                        Dropdown(
+                                       board.duration= Dropdown(
                                             "",
                                             timeDurations,
                                             board.duration.toString(),
@@ -289,22 +289,25 @@ fun ShowEditSystemContent(
                                         ),
                                         modifier = Modifier.padding(22.dp, 10.dp, 20.dp, 0.dp)
                                     )
-                                   
+                                    var hour:Int
+                                    var minute: Int
                                     if (board != null) {
-                                       board.hourToStart= Dropdown(
+
+                                       hour= Dropdown(
                                             "",
                                             hourIntervals,
                                             (board.hourToStart / 60).toString(),
 
                                         )*60
-                                    }
                                     Spacer(modifier = Modifier.size(10.dp, 0.dp))
-                                    if (board != null) {
-                                        board.hourToStart =board.hourToStart-board.hourToStart%60+ Dropdown(
+
+                                        minute = Dropdown(
                                             "",
                                             minuteIntervals,
                                             (board.hourToStart % 60).toString(),
                                         )
+                                        board.hourToStart =hour+ minute
+
                                     }
 
                                 }
