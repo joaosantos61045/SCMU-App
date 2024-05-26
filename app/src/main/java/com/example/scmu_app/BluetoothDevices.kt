@@ -7,6 +7,7 @@ import android.bluetooth.BluetoothManager
 import android.content.Context.BLUETOOTH_SERVICE
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -14,6 +15,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResultCallback
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material3.MaterialTheme
@@ -43,6 +45,7 @@ class BluetoothDevices : ComponentActivity() {
     lateinit var bluetoothAdapter: BluetoothAdapter
     lateinit var takePermission:ActivityResultLauncher<String>
     lateinit var takeResultLauncher: ActivityResultLauncher<Intent>
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         bluetoothManager=getSystemService(BLUETOOTH_SERVICE) as BluetoothManager
@@ -79,6 +82,7 @@ class BluetoothDevices : ComponentActivity() {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.S)
     @Composable
     fun Greeting() {
 
@@ -93,7 +97,11 @@ class BluetoothDevices : ComponentActivity() {
             )
             Spacer(modifier = Modifier.height(20.dp))
             OutlinedButton(onClick = {
-                takePermission.launch(android.Manifest.permission.BLUETOOTH_CONNECT)
+                /*takePermission.launch(
+                    arrayOf(
+                        Manifest.permission.BLUETOOTH_SCAN,
+                        Manifest.permission.BLUETOOTH_CONNECT)
+                    )*/
 
             }) {
                 Text("Bluetooth ON",fontSize=30.sp,

@@ -1,19 +1,15 @@
-package com.example.scmu_app.notifications
+package com.example.scmu_app.others
 
 import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.os.Build
-import androidx.annotation.DrawableRes
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.example.scmu_app.R
-import kotlin.random.Random
 
 class StateNotificationService(
     private val context: Context

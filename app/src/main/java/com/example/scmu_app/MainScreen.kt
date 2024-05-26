@@ -3,6 +3,7 @@ package com.example.scmu_app
 
 import android.annotation.SuppressLint
 import android.content.ContentResolver
+import android.content.Context
 import android.content.Intent
 
 import androidx.compose.runtime.Composable
@@ -85,7 +86,6 @@ fun PreMain(contextResolver: ContentResolver) {
         }
     )
 
-
     CreateDefaultScaffold(showLoading.value) {
         ShowMain(user, showDialog, showLoading)
     }
@@ -110,6 +110,16 @@ fun ShowMain(
                 .padding(top = 25.dp)
                 .height(110.dp)
         )
+
+        val context = LocalContext.current
+        Button(
+            modifier = Modifier.size(40.dp, 40.dp),
+            onClick = {
+            val intent = Intent(context, BluetoothDevices::class.java)
+            context.startActivity(intent)
+        }) {
+
+        }
 
 
         BoxWithConstraints {

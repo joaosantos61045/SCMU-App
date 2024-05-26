@@ -4,8 +4,6 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
-import com.example.scmu_app.notifications.StateNotificationService
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -57,6 +55,7 @@ import androidx.compose.runtime.Composable
 
 import androidx.compose.runtime.remember
 import androidx.compose.ui.draw.clip
+import com.example.scmu_app.others.StateNotificationService
 import com.example.scmu_app.others.User
 import com.example.scmu_app.others.formatDuration
 import com.example.scmu_app.others.updateBoard
@@ -80,7 +79,7 @@ class SystemStatus : ComponentActivity() {
                 val user: User = Gson().fromJson(intent.getStringExtra("user"), User::class.java)
                 val systemName = intent.getStringExtra("systemName")!!
                 val sysId = intent.getStringExtra("systemId")!!
-                val notiSystem=StateNotificationService(LocalContext.current)
+                val notiSystem= StateNotificationService(LocalContext.current)
 
                 notiSystem.createNotificationChannel()
                 PreSystemStatusContent(systemName, user, sysId,notiSystem)
@@ -89,7 +88,7 @@ class SystemStatus : ComponentActivity() {
     }
 }
 
-@SuppressLint("SuspiciousIndentation")
+@SuppressLint("SuspiciousIndentation", "MutableCollectionMutableState")
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun PreSystemStatusContent(
@@ -120,12 +119,12 @@ fun PreSystemStatusContent(
                             boardInfo.value = it
                             boardInfo.value!!.board.lastFetch = System.currentTimeMillis()
 
-                            /*
+
                             if(state.value!= boardInfo.value!!.board.currentState) {
                                 state.value = boardInfo.value!!.board.currentState
-                                notiSystem.showBasicNotification(state.value)
+                                //notiSystem.showBasicNotification(state.value)
                             }
-                            */
+
                             if (events.value == null || boardInfo.value!!.eventsChanged(events.value!!)) {
                                 events.value = boardInfo.value!!.events
                             }

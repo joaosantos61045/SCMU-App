@@ -385,7 +385,7 @@ fun ShowEditSystemContent(
 
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.padding(16.dp)
+                                    modifier = Modifier.padding(horizontal =16.dp)
                                 ) {
                                     Text(
                                         text = "Smart Watering",
@@ -420,7 +420,7 @@ fun ShowEditSystemContent(
                                 if(user!=null)
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.padding(16.dp)
+                                    modifier = Modifier.padding(horizontal =  16.dp)
                                 ) {
                                     Text(
                                         text = "Notifications",
@@ -439,12 +439,10 @@ fun ShowEditSystemContent(
                                             checkedBorderColor = swampGreen,
                                             checkedThumbColor = swampGreen,
                                         ),
-
                                         checked = notiCheck!!,
                                         onCheckedChange = {
 
                                             userBoard?.notifications  = !userBoard?.notifications!!
-
                                             notiCheck=userBoard.notifications
                                         }
                                     )
