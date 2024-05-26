@@ -6,6 +6,7 @@ import android.app.NotificationManager
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
+import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
@@ -29,11 +30,13 @@ class StateNotificationService(
     }
 
     fun showBasicNotification(state: Int) {
-        val statusList = listOf("Running", "Paused", "Waiting")
 
+        var string= ""
+        if(state==0)string="The watering system has begun!"
+        else if(state==2) string="The watering system has ended!"
         val notification = NotificationCompat.Builder(context, "state_changer")
-            .setContentTitle("State Changed")
-            .setContentText("The app has changed state to " + statusList[state] + "!")
+            .setContentTitle("Watering System")
+            .setContentText(string)
             .setSmallIcon(R.drawable.icon)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)

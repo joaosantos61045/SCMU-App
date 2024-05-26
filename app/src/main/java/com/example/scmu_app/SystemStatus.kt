@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -120,9 +121,10 @@ fun PreSystemStatusContent(
                             boardInfo.value!!.board.lastFetch = System.currentTimeMillis()
 
 
-                            if(state.value!= boardInfo.value!!.board.currentState) {
+                            if(state.value!= boardInfo.value!!.board.currentState && boardInfo.value!!.board.currentState==2 || boardInfo.value!!.board.currentState==0) {
                                 state.value = boardInfo.value!!.board.currentState
-                                //notiSystem.showBasicNotification(state.value)
+                                notiSystem.showBasicNotification(state.value)
+
                             }
 
                             if (events.value == null || boardInfo.value!!.eventsChanged(events.value!!)) {
