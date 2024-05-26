@@ -5,7 +5,7 @@ import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
-import com.example.scmu_app.Notifications.StateNotificationService
+import com.example.scmu_app.notifications.StateNotificationService
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -57,7 +57,6 @@ import androidx.compose.runtime.Composable
 
 import androidx.compose.runtime.remember
 import androidx.compose.ui.draw.clip
-import com.example.scmu_app.Notifications.NotificationApplication
 import com.example.scmu_app.others.User
 import com.example.scmu_app.others.formatDuration
 import com.example.scmu_app.others.updateBoard
@@ -82,6 +81,8 @@ class SystemStatus : ComponentActivity() {
                 val systemName = intent.getStringExtra("systemName")!!
                 val sysId = intent.getStringExtra("systemId")!!
                 val notiSystem=StateNotificationService(LocalContext.current)
+
+                notiSystem.createNotificationChannel()
                 PreSystemStatusContent(systemName, user, sysId,notiSystem)
             }
         }
@@ -492,6 +493,7 @@ fun StatusItem(boardInfo: BoardInfo) {
                         if (boardInfo.board.currentState == 0) {
                             val stepSize = (targetValue.value - lastTime.value) / 5F
                             lastTime.value += stepSize
+                            lastTime.value = lastTime.value.coerceAtMost(targetValue.value)
                         }
                         if(boardInfo.board.currentState==2)
                         state.value=boardInfo.board.state

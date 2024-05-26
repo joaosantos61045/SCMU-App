@@ -1,11 +1,13 @@
-package com.example.scmu_app.Notifications
+package com.example.scmu_app.notifications
 
 import android.Manifest
+import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.os.Build
 import androidx.annotation.DrawableRes
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
@@ -13,36 +15,46 @@ import androidx.core.app.NotificationManagerCompat
 import com.example.scmu_app.R
 import kotlin.random.Random
 
-class StateNotificationService (
+class StateNotificationService(
     private val context: Context
 ) {
-    private val notificationManager = context.getSystemService(NotificationManager::class.java)
 
-    fun showBasicNotification(state:Int) {
+    fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val importance = NotificationManager.IMPORTANCE_DEFAULT
+            val channel =
+                NotificationChannel("state_changer", "State changer channel", importance).apply {
+                    description = "A notification channel for changes of state reminders"
+                }
+            val notificationManager: NotificationManager =
+                context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
+        }
+    }
+
+    fun showBasicNotification(state: Int) {
         val statusList = listOf("Running", "Paused", "Waiting")
 
         val notification = NotificationCompat.Builder(context, "state_changer")
             .setContentTitle("State Changed")
-            .setContentText("The app has changed state to "+statusList[state]+"!")
-            .setSmallIcon(R.drawable.image)
+            .setContentText("The app has changed state to " + statusList[state] + "!")
+            .setSmallIcon(R.drawable.icon)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
             .build()
-    with(NotificationManagerCompat.from(context)){
-    if (ActivityCompat.checkSelfPermission(
-            context,
-            Manifest.permission.POST_NOTIFICATIONS
-        ) != PackageManager.PERMISSION_GRANTED
-    ) {
 
-        return
-    }
-        notify(1, notification)
+        with(NotificationManagerCompat.from(context)) {
+            if (ActivityCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
+            ) { return }
+            notify(1, notification)
         }
 
     }
 
-    fun showExpandableNotification() {
+    /*fun showExpandableNotification() {
         val image = context.bitmapFromResource(R.drawable.image01)
 
         val notification = NotificationCompat.Builder(context, "water_reminder")
@@ -181,4 +193,6 @@ class StateNotificationService (
         resources,
         resId
     )
+
+     */
 }
