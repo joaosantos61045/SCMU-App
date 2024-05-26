@@ -8,13 +8,13 @@ import android.content.Intent
 import androidx.compose.runtime.Composable
 
 import android.os.Bundle
+import android.provider.Settings
 
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -37,12 +37,14 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.example.scmu_app.others.User
+import com.example.scmu_app.others.UserBoard
+import com.example.scmu_app.others.fetchFindBoard
 import com.example.scmu_app.others.fetchUser
+import com.example.scmu_app.others.updateUser
 import com.example.scmu_app.ui.theme.CreateDefaultScaffold
 
 import com.example.scmu_app.ui.theme.SCMUAppTheme
 import com.example.scmu_app.ui.theme.bgGreen
-import com.example.scmu_app.ui.theme.createTile
 import com.example.scmu_app.ui.theme.darkGreen
 import com.example.scmu_app.ui.theme.mintGreen
 import com.example.scmu_app.ui.theme.titleExtraLarge
@@ -71,12 +73,11 @@ class MainScreen : ComponentActivity() {
 fun PreMain(contextResolver: ContentResolver) {
 
     val showDialog = remember { mutableStateOf(false) }
-    val showNameDialog = remember { mutableStateOf(false) }
     val showLoading = remember { mutableStateOf(true) }
     val user = remember { mutableStateOf(User("", mutableListOf())) }
 
     //Fetch user from the database
-    fetchUser(contextResolver,
+    fetchUser(User(Settings.Secure.getString(contextResolver, Settings.Secure.ANDROID_ID), mutableListOf()),
         onFailure = {},
         onSuccess = {
             showLoading.value = false
@@ -86,7 +87,7 @@ fun PreMain(contextResolver: ContentResolver) {
 
 
     CreateDefaultScaffold(showLoading.value) {
-        ShowMain(user, showDialog, showNameDialog)
+        ShowMain(user, showDialog, showLoading)
     }
 }
 
@@ -94,7 +95,7 @@ fun PreMain(contextResolver: ContentResolver) {
 fun ShowMain(
     user: MutableState<User>,
     showDialog: MutableState<Boolean>,
-    showNameDialog: MutableState<Boolean>
+    showLoading: MutableState<Boolean>
 ) {
     Column(
         modifier = Modifier
@@ -146,7 +147,7 @@ fun ShowMain(
                         ) {
                             items(user.value.boards) { board ->
 
-                                SystemItem(name = board.name, id = board.board,user.value)
+                                SystemItem(name = board.name, id = board.board, user.value)
                             }
                         }
 
@@ -176,68 +177,110 @@ fun ShowMain(
         }
 
         if (showDialog.value)
-            SystemListDialog(user, showDialog, showNameDialog)
-        if(showNameDialog.value)
-            SystemNameDialog(showNameDialog)
+            SystemListDialog(user, showDialog, showLoading)
     }
 }
 
 @SuppressLint("UnrememberedMutableState")
 @Composable
-fun SystemListDialog(user: MutableState<User>, showDialog: MutableState<Boolean>,showNameDialog: MutableState<Boolean>) {
-    val context = LocalContext.current
-
-    var systemName  by remember { mutableStateOf("") }
-    var systemId  by remember { mutableStateOf("") }
+fun SystemListDialog(
+    user: MutableState<User>,
+    showDialog: MutableState<Boolean>,
+    showLoading: MutableState<Boolean>
+) {
+    var systemName by remember { mutableStateOf("") }
+    var systemId by remember { mutableStateOf("") }
 
     AlertDialog(
         containerColor = mintGreen,
         onDismissRequest = { showDialog.value = false },
-        title = { Text("Add System", color = darkGreen, fontWeight = FontWeight.Bold, fontSize = 28.sp) },
+        title = {
+            Text(
+                "Add System",
+                color = darkGreen,
+                fontWeight = FontWeight.Bold,
+                fontSize = 28.sp
+            )
+        },
         icon = {},
         text = {
             Column {
-                TextBox(
+                systemName = TextBox(
+                    value = "",
+                    label = "Name",
+                    password = false
+                )
+                systemId = TextBox(
                     value = "",
                     label = "ID",
-                    password = false)
+                    password = false
+                )
 
-                Spacer(modifier = Modifier.height(8.dp))
-
-                TextBox(
-                    value = "",
-                    label = "Password",
-                    password = true)
             }
         },
         dismissButton = {
 
             Button(
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.LightGray),
+                    containerColor = Color.LightGray
+                ),
                 onClick = { showDialog.value = false }) {
-                Text("Back",color = Color.Black)
+                Text("Back", color = Color.Black)
             }
         },
         confirmButton = {
             Button(colors = ButtonDefaults.buttonColors(
-                containerColor = darkGreen),
+                containerColor = darkGreen
+            ),
                 onClick = {
-                //if(systemName.isEmpty() || systemId.isEmpty())
-                //    return@Button
 
-                    showNameDialog.value = true
+                    if(systemName.isEmpty() || systemId.isEmpty())
+                        return@Button
+
+                    if (user.value.boards.find {
+                            it.name == systemName || it.board == systemId
+                        } != null) {
+                        showDialog.value = false
+                        return@Button
+                    }
+
+                    showLoading.value = true
+                    fetchFindBoard(systemId,
+                        onFailure = {
+                            showDialog.value = false
+                            showLoading.value = false
+
+                            //TODO move to add system
+                        },
+                        onSuccess = {
+                            user.value.boards.add(UserBoard(systemId, systemName, true))
+                            updateUser(
+                                onFailure = {
+                                    showDialog.value = false
+                                    showLoading.value = false},
+                                onSuccess = {
+                                    user.value = it
+                                    showDialog.value = false
+                                    showLoading.value = false
+                                }, user.value
+                            )
+
+                        }
+                    )
+                    //if(systemName.isEmpty() || systemId.isEmpty())
+                    //    return@Button
+
                     //TODO check if the system already exists
-                /*val intent = Intent(context, AddSystem::class.java).apply {
-                    putExtra("systemName", systemName)
-                    putExtra("systemId", systemId)
-                }
+                    /*val intent = Intent(context, AddSystem::class.java).apply {
+                        putExtra("systemName", systemName)
+                        putExtra("systemId", systemId)
+                    }
 
-                context.startActivity(intent)*/
+                    context.startActivity(intent)*/
 
-                showDialog.value = false
-            }) {
-                Text("Add",color = Color.White)
+                    showDialog.value = false
+                }) {
+                Text("Add", color = Color.White)
             }
         }
     )
@@ -249,38 +292,48 @@ fun SystemNameDialog(showNameDialog: MutableState<Boolean>) {
     AlertDialog(
         containerColor = mintGreen,
         onDismissRequest = { showNameDialog.value = false },
-        title = { Text("Give a name", color = darkGreen, fontWeight = FontWeight.Bold, fontSize = 28.sp) },
+        title = {
+            Text(
+                "Give a name",
+                color = darkGreen,
+                fontWeight = FontWeight.Bold,
+                fontSize = 28.sp
+            )
+        },
         icon = {},
         text = {
             Column {
                 TextBox(
                     value = "",
                     label = "Name",
-                    password = false)
+                    password = false
+                )
             }
         },
         dismissButton = {
             Button(
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.LightGray),
+                    containerColor = Color.LightGray
+                ),
                 onClick = { showNameDialog.value = false }) {
-                Text("Cancel",color = Color.Black)
+                Text("Cancel", color = Color.Black)
             }
         },
         confirmButton = {
             Button(colors = ButtonDefaults.buttonColors(
-                containerColor = darkGreen),
+                containerColor = darkGreen
+            ),
                 onClick = {
                     showNameDialog.value = false
                 }) {
-                Text("Add",color = Color.White)
+                Text("Add", color = Color.White)
             }
         }
     )
 }
 
 @Composable
-fun SystemItem(name: String, id: String,user: User) {
+fun SystemItem(name: String, id: String, user: User) {
     val context = LocalContext.current
 
     Surface(

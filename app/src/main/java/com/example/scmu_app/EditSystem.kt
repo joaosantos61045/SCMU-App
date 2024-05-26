@@ -163,7 +163,11 @@ fun ShowEditSystemContent(
                         if(board!=null)
                             updateBoard(board,{showLoading.value=true},{
                                 showLoading.value=false
-                                val intent = Intent(context, MainScreen::class.java)
+                                val intent = Intent(context, SystemStatus::class.java) .apply {
+                                    putExtra("user", Gson().toJson(user))
+                                    putExtra("systemName", sysName)
+                                    putExtra("systemId", sysId)
+                                }
                                 context.startActivity(intent)
                             })
                     }) {
@@ -393,7 +397,10 @@ fun ShowEditSystemContent(
 
                                     Switch(
                                         colors = SwitchDefaults.colors(
-                                            checkedTrackColor = darkGreen
+                                            checkedTrackColor = darkGreen,
+                                            checkedIconColor = swampGreen,
+                                            checkedBorderColor = swampGreen,
+                                            checkedThumbColor = swampGreen,
                                         ),
 
                                         checked = isChecked ,
@@ -445,7 +452,7 @@ fun ShowEditSystemContent(
                                                 containerColor = Color.Red
                                             )
                                         ) {
-                                            Text(text = "Remove")
+                                            Text(text = "Remove", color = Color.White)
                                         }
                                     }
                                     Spacer(modifier = Modifier.size(0.dp, 40.dp))
@@ -466,14 +473,17 @@ fun ShowEditSystemContent(
         AlertDialog(
             containerColor = mintGreen,
             onDismissRequest = { showDialog.value = false },
-            title = { Text("Remove System") },
+            title = { Text("Remove System",
+                    color = darkGreen,
+                fontWeight = FontWeight.Bold,
+                fontSize = 28.sp) },
             text = {
                 Column {
                     Text(
                         modifier = Modifier
                             .padding(horizontal = 16.dp, vertical = 6.dp)
                             .fillMaxWidth(),
-                        text = "Are you sure you want to remove the system?"
+                        text = "Are you sure you want to remove the system?", color = Color.Black
                     )
                     Spacer(modifier = Modifier.height(8.dp))
 
@@ -482,20 +492,20 @@ fun ShowEditSystemContent(
             dismissButton = {
                 Button(
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = darkGreen
+                        containerColor = Color.LightGray
                     ),
                     onClick = { showDialog.value = false }) {
-                    Text("Cancel")
+                    Text("Cancel", color = Color.Black)
                 }
             },
             confirmButton = {
                 Button(colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Red
+                    containerColor = darkGreen
                 ),
                     onClick = {
                         showLoading.value=true
                         user.boards.removeIf{ it.board.equals(sysId)}
-                        updateUser(context.contentResolver,{
+                        updateUser({
                             showLoading.value=false;
                         },{
                             showLoading.value=false;
@@ -507,7 +517,7 @@ fun ShowEditSystemContent(
 
                     }) {
 
-                    Text("Remove")
+                    Text("Confirm", color = Color.White)
                 }
             },
 

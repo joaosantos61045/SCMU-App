@@ -1,6 +1,7 @@
 package com.example.scmu_app.others
 
 import android.util.Log
+import androidx.compose.runtime.Composable
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.OkHttpClient

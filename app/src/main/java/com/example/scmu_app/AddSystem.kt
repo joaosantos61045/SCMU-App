@@ -514,7 +514,7 @@ private fun toggleDaySelection(index: Int, selectedIndices: MutableList<Int>) {
 
 
 @Composable
-fun TextBox(label: String, value: String = "", password: Boolean = false) {
+fun TextBox(label: String, value: String = "", password: Boolean = false): String {
     var textValue by remember { mutableStateOf(value) }
 
     OutlinedTextField(
@@ -542,6 +542,8 @@ fun TextBox(label: String, value: String = "", password: Boolean = false) {
             .fillMaxWidth()
 
         )
+
+    return textValue;
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

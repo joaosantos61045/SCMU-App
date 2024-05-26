@@ -28,7 +28,7 @@ data class Board(
     @Transient var lastFetch: Long
 
     ) {
-   fun isOnline():Boolean{return System.currentTimeMillis()/1000 - lastUpdate < 5  }
+   fun isOnline():Boolean{return System.currentTimeMillis()/1000 - lastUpdate < 10  }
     fun getStates(): String {
         val statusList = listOf("Running", "Paused", "Waiting")
         return statusList[currentState]

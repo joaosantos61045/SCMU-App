@@ -106,7 +106,7 @@ fun PreSystemStatusContent(systemName: String, user: User, sysId: String) {
 
 
                     fetchBoardInfo(sysId,
-                        onFailure = { Log.w("Test", "ERROU") },
+                        onFailure = {},
                         onSuccess = {
                             showLoading.value = false
                             boardInfo.value = it
@@ -137,7 +137,6 @@ fun PreSystemStatusContent(systemName: String, user: User, sysId: String) {
 
 @SuppressLint("SuspiciousIndentation")
 @RequiresApi(Build.VERSION_CODES.O)
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SystemStatusContent(
     boardInfo: MutableState<BoardInfo?>,
@@ -430,15 +429,12 @@ fun InfoItem(boardInfo: BoardInfo, systemName: String, user: User, sysId: String
                     .background(swampGreen, RoundedCornerShape(15.dp))
                     .zIndex(100f)
 
-
             ) {
                 Icon(
                     imageVector = Icons.Default.Settings,
                     contentDescription = "Settings",
                     modifier = Modifier.size(35.dp),
                     tint = Color.White,
-
-
                     )
             }
         }
