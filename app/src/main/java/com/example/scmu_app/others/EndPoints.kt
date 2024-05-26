@@ -64,10 +64,12 @@ fun cancelEvent( status: Int){
 
 
 }
-fun updateBoard( board: Board){
+fun updateBoard( board: Board ,onFailure: () -> Unit, onSuccess: (Board) -> Unit){
 
     val gson = Gson()
-    putRequest("$URL/rest/boards/arduino01/user", onFailure = { }, onSuccess = {}, requestBody = gson.toJson(board))
+    putRequest("$URL/rest/boards/arduino01/user", onFailure = {onFailure() }, onSuccess = { it.body?.string().let { content ->
+        onSuccess(gson.fromJson(content, Board::class.java))
+    }}, requestBody = gson.toJson(board))
 }
 fun updateUser(context: ContentResolver, onFailure: () -> Unit, onSuccess: (User) -> Unit,user:User) {
 

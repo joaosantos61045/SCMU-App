@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -81,32 +82,37 @@ class SystemStatus : ComponentActivity() {
     }
 }
 
+@SuppressLint("SuspiciousIndentation")
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun PreSystemStatusContent(systemName: String, user: User, sysId: String) {
     val showLoading = remember { mutableStateOf(true) }
     val boardInfo: MutableState<BoardInfo?> = remember { mutableStateOf(null) }
     val currentTime = remember { mutableStateOf(0L) }
-    val state = remember { mutableStateOf(0) }
+    val currentDate = remember { mutableStateOf(0L) }
+
 
     LaunchedEffect(Unit) {
 
-        while (true) {
+        while (currentDate.value-System.currentTimeMillis()<1000) {
+            currentDate.value = System.currentTimeMillis()+1000
             fetchBoardInfo(
-                onFailure = {},
+                onFailure = { Log.w("Test","ERROU")},
                 onSuccess = {
                     showLoading.value = false
                     boardInfo.value = it
+                    boardInfo.value!!.board.lastFetch=System.currentTimeMillis()
 
                     val bInfo = boardInfo.value!!
 
-                    if(state.value < bInfo.board.currentState) {
-                        state.value = bInfo.board.currentState
+                   // if(state.value < bInfo.board.currentState) {
+
 
                         if (bInfo.events.isNotEmpty())
                             currentTime.value = bInfo.board.currentDate- bInfo.events[bInfo.events.size - 1].start
 
-                    }
+                  //  }
+                    Log.w("Test", currentDate.value.toString())
                 }
             )
             delay(1000)
@@ -223,8 +229,10 @@ fun SystemStatusContent(
                         }
                     }
                     Spacer(modifier = Modifier.size(0.dp, 40.dp))
+
+                        if(boardInfo.value!=null && boardInfo.value!!.board.isOnline()){
                     BoxWithConstraints {
-                        createTile("Event:")
+                        createTile("Events:")
                         Row(
                             Modifier
                                 .offset(0.dp, 20.dp)
@@ -242,6 +250,7 @@ fun SystemStatusContent(
                         }
                     }
                     Spacer(modifier = Modifier.size(0.dp, 40.dp))
+                        }
                     BoxWithConstraints {
                         createTile("History:")
                         Row(
@@ -424,7 +433,9 @@ fun InfoItem(boardInfo: BoardInfo, systemName: String,user: User,sysId:String) {
 @Composable
 fun StatusItem(boardInfo: BoardInfo) {
     val showDialog = remember { mutableStateOf(false) }
-    val shouldShow = boardInfo.board.currentState < 2
+    var shouldShow = remember {
+        mutableStateOf(boardInfo.board.currentState < 2)
+    }
 
     Row(
         modifier = Modifier.padding(top = 8.dp),
@@ -432,7 +443,9 @@ fun StatusItem(boardInfo: BoardInfo) {
     ) {
 
         Column(
-            modifier = Modifier.weight(1f).padding(start= 15.dp)
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = 15.dp)
         ) {
             Text(
                 text = "Status: ${boardInfo.board.getStates()}",
@@ -445,11 +458,11 @@ fun StatusItem(boardInfo: BoardInfo) {
                 modifier = Modifier
             )
 
-            if (shouldShow) {
+            if (shouldShow.value) {
                 val lastEvent = boardInfo.events[boardInfo.events.size - 1]
                 val pausedTime = boardInfo.board.currentDate -lastEvent.pausedTime
                 val currentTime = boardInfo.board.currentDate - lastEvent.start
-                val teoricExecTime = boardInfo.board.duration * 60
+                val teoricExecTime = (lastEvent.executionTime) * 60
                 val percentDone = Math.min(1f, currentTime / (teoricExecTime.toFloat()))
 
                 Text(pausedTime.toString(), color =  Color.Black)
@@ -468,10 +481,12 @@ fun StatusItem(boardInfo: BoardInfo) {
         Column(
             modifier = Modifier.padding(end = 15.dp)
         ) {
-            if (shouldShow)
+            if (shouldShow.value)
 
                 IconButton(
-                    onClick = { showDialog.value = true },
+                    onClick = {
+
+                        showDialog.value = true },
                     modifier = Modifier
                         .size(50.dp)
                         .background(shape = RoundedCornerShape(15.dp), color = swampGreen)
@@ -518,6 +533,7 @@ fun StatusItem(boardInfo: BoardInfo) {
 
                         showDialog.value = false
                         cancelEvent(2)
+                        shouldShow.value=false//TODO ?
 
                     }) {
 

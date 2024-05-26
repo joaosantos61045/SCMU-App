@@ -159,10 +159,13 @@ fun ShowEditSystemContent(
                         )
                         .padding(10.dp, 5.dp),
                     onClick = {
+                        showLoading.value=true
                         if(board!=null)
-                            updateBoard(board)
-                        val intent = Intent(context, MainScreen::class.java)
-                        context.startActivity(intent)
+                            updateBoard(board,{showLoading.value=true},{
+                                showLoading.value=false
+                                val intent = Intent(context, MainScreen::class.java)
+                                context.startActivity(intent)
+                            })
                     }) {
                     Icon(
                         Icons.Filled.ArrowBack,

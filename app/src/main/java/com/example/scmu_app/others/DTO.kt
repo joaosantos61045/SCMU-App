@@ -1,5 +1,7 @@
 package com.example.scmu_app.others
 
+import com.google.gson.annotations.Expose
+
 data class User (
     val id: String,
     var boards: MutableList<UserBoard>
@@ -21,9 +23,10 @@ data class Board(
     var currentState: Int,
     var currentDate: Long,
     var lastUpdate: Long,
+    @Expose(serialize = false,deserialize = false) var lastFetch: Long
 
     ) {
-   fun isOnline():Boolean{return System.currentTimeMillis()/1000 - lastUpdate < 10  }
+   fun isOnline():Boolean{return System.currentTimeMillis()/1000 - lastUpdate < 5  }
     fun getStates(): String {
         val statusList = listOf("Running", "Paused", "Waiting")
         return statusList[currentState]
