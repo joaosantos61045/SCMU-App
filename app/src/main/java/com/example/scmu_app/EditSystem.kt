@@ -103,7 +103,9 @@ fun MyAppContent(user: User, systemName: String, sysId: String) {
                 // Update the board with the fetched data
                 board = fetchedBoard
                 showLoading.value = false
+
             })
+
         }
 
         // Only show content after data has been fetched
@@ -112,7 +114,7 @@ fun MyAppContent(user: User, systemName: String, sysId: String) {
 
     }
 }
-@SuppressLint("MutableCollectionMutableState")
+@SuppressLint("MutableCollectionMutableState", "SuspiciousIndentation")
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun ShowEditSystemContent(
@@ -160,6 +162,7 @@ fun ShowEditSystemContent(
                         .padding(10.dp, 5.dp),
                     onClick = {
                         showLoading.value=true
+                        updateUser({},{},user)
                         if(board!=null)
                             updateBoard(board,{showLoading.value=true},{
                                 showLoading.value=false
@@ -379,7 +382,8 @@ fun ShowEditSystemContent(
                             ) {
 
                                 var isChecked by remember { mutableStateOf( board.active ) }
-
+                                var userBoard = user.boards.find { it.board==sysId }
+                                var notiCheck = userBoard?.notifications
 
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
@@ -408,6 +412,42 @@ fun ShowEditSystemContent(
 
                                             board.active = !board.active
                                         isChecked=board.active
+                                        }
+                                    )
+
+
+
+
+                                }
+                                if(user!=null)
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.padding(16.dp)
+                                ) {
+                                    Text(
+                                        text = "Notifications",
+                                        style = TextStyle(
+                                            fontSize = 18.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color.Black
+                                        ),
+                                        modifier = Modifier.weight(1f)
+                                    )
+
+                                    Switch(
+                                        colors = SwitchDefaults.colors(
+                                            checkedTrackColor = darkGreen,
+                                            checkedIconColor = swampGreen,
+                                            checkedBorderColor = swampGreen,
+                                            checkedThumbColor = swampGreen,
+                                        ),
+
+                                        checked = notiCheck!!,
+                                        onCheckedChange = {
+
+                                            userBoard?.notifications  = !userBoard?.notifications!!
+
+                                            notiCheck=userBoard.notifications
                                         }
                                     )
 

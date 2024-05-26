@@ -5,6 +5,7 @@ import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import com.example.scmu_app.Notifications.StateNotificationService
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -53,12 +54,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 
 import androidx.compose.runtime.remember
 import androidx.compose.ui.draw.clip
+import com.example.scmu_app.Notifications.NotificationApplication
 import com.example.scmu_app.others.User
-import com.example.scmu_app.others.cancelEvent
 import com.example.scmu_app.others.formatDuration
 import com.example.scmu_app.others.updateBoard
 import com.example.scmu_app.ui.theme.darkGreen
@@ -77,10 +77,12 @@ class SystemStatus : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             SCMUAppTheme {
+
                 val user: User = Gson().fromJson(intent.getStringExtra("user"), User::class.java)
                 val systemName = intent.getStringExtra("systemName")!!
                 val sysId = intent.getStringExtra("systemId")!!
-                PreSystemStatusContent(systemName, user, sysId)
+                val notiSystem=StateNotificationService(LocalContext.current)
+                PreSystemStatusContent(systemName, user, sysId,notiSystem)
             }
         }
     }
@@ -89,12 +91,17 @@ class SystemStatus : ComponentActivity() {
 @SuppressLint("SuspiciousIndentation")
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun PreSystemStatusContent(systemName: String, user: User, sysId: String) {
+fun PreSystemStatusContent(
+    systemName: String,
+    user: User,
+    sysId: String,
+    notiSystem: StateNotificationService
+) {
     val showLoading = remember { mutableStateOf(true) }
     val boardInfo: MutableState<BoardInfo?> = remember { mutableStateOf(null) }
     val events = remember { mutableStateOf<MutableList<Event>?>(null) }
     val currentDate = remember { mutableStateOf(0L) }
-
+    var state= remember { mutableStateOf(4) }
     DisposableEffect(Unit) {
         val scope = CoroutineScope(Dispatchers.Main)
 
@@ -115,9 +122,15 @@ fun PreSystemStatusContent(systemName: String, user: User, sysId: String) {
                             if (events.value == null || boardInfo.value!!.eventsChanged(events.value!!)) {
                                 events.value = boardInfo.value!!.events
                             }
+                            if(state.value!= boardInfo.value!!.board.currentState) {
+                                state.value = boardInfo.value!!.board.currentState
+                                Log.w("NOTI",state.value.toString())
+                                notiSystem.showBasicNotification(state.value)
+                            }
                         }
                     )
                 }
+
                 delay(1000)
             }
         }
