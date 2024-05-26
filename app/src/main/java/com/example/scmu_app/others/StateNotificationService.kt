@@ -34,6 +34,7 @@ class StateNotificationService(
         var string= ""
         if(state==0)string="The watering system has begun!"
         else if(state==2) string="The watering system has ended!"
+        else if(state==3)string="The watering system has been resumed from a pause!"
         val notification = NotificationCompat.Builder(context, "state_changer")
             .setContentTitle("Watering System")
             .setContentText(string)

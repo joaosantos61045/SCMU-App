@@ -122,9 +122,12 @@ fun PreSystemStatusContent(
 
 
                             if(state.value!= boardInfo.value!!.board.currentState && boardInfo.value!!.board.currentState==2 || boardInfo.value!!.board.currentState==0) {
-                                state.value = boardInfo.value!!.board.currentState
-                                notiSystem.showBasicNotification(state.value)
 
+                                state.value = boardInfo.value!!.board.currentState
+                                if(state.value==1 && boardInfo.value!!.board.currentState==0)
+                                notiSystem.showBasicNotification(3)
+                                else
+                                    notiSystem.showBasicNotification(state.value)
                             }
 
                             if (events.value == null || boardInfo.value!!.eventsChanged(events.value!!)) {
