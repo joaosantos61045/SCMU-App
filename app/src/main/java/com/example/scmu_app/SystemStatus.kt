@@ -120,14 +120,16 @@ fun PreSystemStatusContent(
                             boardInfo.value = it
                             boardInfo.value!!.board.lastFetch = System.currentTimeMillis()
 
+                            /*
+                            if(state.value!= boardInfo.value!!.board.currentState) {
+                                state.value = boardInfo.value!!.board.currentState
+                                notiSystem.showBasicNotification(state.value)
+                            }
+                            */
                             if (events.value == null || boardInfo.value!!.eventsChanged(events.value!!)) {
                                 events.value = boardInfo.value!!.events
                             }
-                            if(state.value!= boardInfo.value!!.board.currentState) {
-                                state.value = boardInfo.value!!.board.currentState
-                                Log.w("NOTI",state.value.toString())
-                                notiSystem.showBasicNotification(state.value)
-                            }
+
                         }
                     )
                 }

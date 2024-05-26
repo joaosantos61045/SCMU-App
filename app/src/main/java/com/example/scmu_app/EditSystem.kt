@@ -81,8 +81,6 @@ class EditSystem : ComponentActivity() {
                 val systemName = intent.getStringExtra("systemName")!!
                 val sysId=intent.getStringExtra("systemId")!!
                     MyAppContent(user,systemName,sysId)
-
-       // user.boards.find { it.board==sysId }
             }
         }
     }//onResume
@@ -505,8 +503,6 @@ fun ShowEditSystemContent(
             }
 
         }
-
-
     }
 
     if (showDialog.value) {
