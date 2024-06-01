@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -85,9 +86,12 @@ class SystemStatus : ComponentActivity() {
 
                 notiSystem.createNotificationChannel()
                 PreSystemStatusContent(systemName, user, sysId,notiSystem)
+                Log.w("Notification","onCreate")
             }
         }
     }
+
+
 }
 
 @SuppressLint("SuspiciousIndentation", "MutableCollectionMutableState")
@@ -99,6 +103,7 @@ fun PreSystemStatusContent(
     sysId: String,
     notiSystem: StateNotificationService
 ) {
+
     val showLoading = remember { mutableStateOf(true) }
     val boardInfo: MutableState<BoardInfo?> = remember { mutableStateOf(null) }
     val events = remember { mutableStateOf<MutableList<Event>?>(null) }
@@ -106,6 +111,7 @@ fun PreSystemStatusContent(
     var state= remember { mutableStateOf(4) }
     DisposableEffect(Unit) {
         val scope = CoroutineScope(Dispatchers.Main)
+
 
         val job = scope.launch {
             while (isActive) {
@@ -120,15 +126,18 @@ fun PreSystemStatusContent(
                             showLoading.value = false
                             boardInfo.value = it
                             boardInfo.value!!.board.lastFetch = System.currentTimeMillis()
+                            Log.w("Notification",user.boards.find {it.board  == sysId }!!.notifications.toString())
+                            if(boardInfo.value!!.board.isOnline() && user.boards.find {it.board  == sysId }!!.notifications)
+                            if(state.value!= boardInfo.value!!.board.currentState ) {
 
-
-                            if(state.value!= boardInfo.value!!.board.currentState && boardInfo.value!!.board.currentState==2 || boardInfo.value!!.board.currentState==0) {
-
+                                if(state.value==1 && boardInfo.value!!.board.currentState==0) {
+                                    Log.w("Notification", "Notification paused to resume")
+                                    notiSystem.showBasicNotification(3)
+                                }else if(boardInfo.value!!.board.currentState!=1) {
+                                    Log.w("Notification", "Notification normal")
+                                    notiSystem.showBasicNotification(boardInfo.value!!.board.currentState)
+                                }
                                 state.value = boardInfo.value!!.board.currentState
-                                if(state.value==1 && boardInfo.value!!.board.currentState==0)
-                                notiSystem.showBasicNotification(3)
-                                else
-                                    notiSystem.showBasicNotification(state.value)
                             }
 
                             if (events.value == null || boardInfo.value!!.eventsChanged(events.value!!)) {
@@ -145,6 +154,7 @@ fun PreSystemStatusContent(
 
         onDispose {
             job.cancel()
+            Log.w("Notification","Dispose")
         }
     }
 
@@ -153,6 +163,7 @@ fun PreSystemStatusContent(
     CreateDefaultScaffold(showLoading.value) {
         SystemStatusContent(boardInfo, systemName, user, sysId, events)
     }
+
 }
 
 
@@ -444,6 +455,7 @@ fun InfoItem(boardInfo: BoardInfo, systemName: String, user: User, sysId: String
                         putExtra("board",Gson().toJson(board))
 
                     }
+
 
                     context.startActivity(intent)
                 },
