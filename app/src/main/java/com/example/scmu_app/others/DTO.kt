@@ -11,7 +11,7 @@ data class User (
 
 data class UserBoard(
     val board: String,
-    val name: String,
+    var name: String,
     var notifications: Boolean
 )
 

@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -56,6 +55,7 @@ import androidx.compose.runtime.Composable
 
 import androidx.compose.runtime.remember
 import androidx.compose.ui.draw.clip
+import com.example.scmu_app.others.Board
 import com.example.scmu_app.others.StateNotificationService
 import com.example.scmu_app.others.User
 import com.example.scmu_app.others.formatDuration
@@ -78,6 +78,7 @@ class SystemStatus : ComponentActivity() {
             SCMUAppTheme {
 
                 val user: User = Gson().fromJson(intent.getStringExtra("user"), User::class.java)
+
                 val systemName = intent.getStringExtra("systemName")!!
                 val sysId = intent.getStringExtra("systemId")!!
                 val notiSystem= StateNotificationService(LocalContext.current)
@@ -247,7 +248,7 @@ fun SystemStatusContent(
                             ) {
 
                                 boardInfo.value?.let {
-                                    InfoItem(it, systemName, user, sysId)
+                                    InfoItem(it, systemName, user, sysId,it.board)
                                 }
 
 
@@ -377,7 +378,7 @@ fun HistoryItem(item: Event) {
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun InfoItem(boardInfo: BoardInfo, systemName: String, user: User, sysId: String) {
+fun InfoItem(boardInfo: BoardInfo, systemName: String, user: User, sysId: String, board: Board) {
     val context = LocalContext.current
 
     Row(
@@ -440,6 +441,8 @@ fun InfoItem(boardInfo: BoardInfo, systemName: String, user: User, sysId: String
                         putExtra("user", Gson().toJson(user))
                         putExtra("systemName", systemName)
                         putExtra("systemId", sysId)
+                        putExtra("board",Gson().toJson(board))
+
                     }
 
                     context.startActivity(intent)

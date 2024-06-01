@@ -3,7 +3,6 @@ package com.example.scmu_app
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -79,22 +78,23 @@ class EditSystem : ComponentActivity() {
 
                 val user: User = Gson().fromJson(intent.getStringExtra("user"),User::class.java)
                 val systemName = intent.getStringExtra("systemName")!!
+                val board: Board =Gson().fromJson(intent.getStringExtra("board"),Board::class.java)
                 val sysId=intent.getStringExtra("systemId")!!
-                    MyAppContent(user,systemName,sysId)
+                    MyAppContent(user,systemName,sysId,board)
             }
         }
     }//onResume
 }
 
 @Composable
-fun MyAppContent(user: User, systemName: String, sysId: String) {
+fun MyAppContent(user: User, systemName: String, sysId: String, board: Board) {
     // Initialize the board with default values
-    var board by remember { mutableStateOf<Board?>(null) }
+    //var board by remember { mutableStateOf<Board?>(null) }
 
-    val showLoading = remember { mutableStateOf(true) }
+    val showLoading = remember { mutableStateOf(false) }
     CreateDefaultScaffold(showLoading.value) {
         // Fetch the board data asynchronously
-        LaunchedEffect(Unit) {
+        /*LaunchedEffect(Unit) {
             fetchFindBoard(sysId, onFailure = {
                 // Handle failure case
             }, onSuccess = { fetchedBoard ->
@@ -104,7 +104,7 @@ fun MyAppContent(user: User, systemName: String, sysId: String) {
 
             })
 
-        }
+        }*/
 
         // Only show content after data has been fetched
 
@@ -166,7 +166,7 @@ fun ShowEditSystemContent(
                                 showLoading.value=false
                                 val intent = Intent(context, SystemStatus::class.java) .apply {
                                     putExtra("user", Gson().toJson(user))
-                                    putExtra("systemName", sysName)
+                                    putExtra("systemName", user.boards.find { it.board==sysId }!!.name)
                                     putExtra("systemId", sysId)
                                 }
                                 context.startActivity(intent)
@@ -224,7 +224,7 @@ fun ShowEditSystemContent(
                                     .offset(0.dp, 30.dp)
                             ) {
 
-                                TextBox("Name", sysName)
+                                user.boards.find { it.board==sysId }!!.name= TextBox("Name", sysName)
                                 Spacer(modifier = Modifier.size(0.dp, 40.dp))
                             }
                         }
@@ -244,7 +244,7 @@ fun ShowEditSystemContent(
                                     .offset(0.dp, 30.dp)
                             ) {
 
-                                TextBox("Name", sysName)
+                                TextBox("Name", "insert wifi here")
                                 TextBox("Password", password = true)
                                 Spacer(modifier = Modifier.size(0.dp, 40.dp))
                             }
@@ -372,7 +372,8 @@ fun ShowEditSystemContent(
                             Modifier
                                 .offset(0.dp, 20.dp)
                         ) {
-                            if (board != null)
+
+                            if (board != null && user!=null)
                             Column(
                                 Modifier
                                     .background(mintGreen)
@@ -381,7 +382,7 @@ fun ShowEditSystemContent(
 
                                 var isChecked by remember { mutableStateOf( board.active ) }
                                 var userBoard = user.boards.find { it.board==sysId }
-                                var notiCheck = userBoard?.notifications
+                                var notiCheck by remember{ mutableStateOf(userBoard!!.notifications)}
 
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
@@ -417,7 +418,7 @@ fun ShowEditSystemContent(
 
 
                                 }
-                                if(user!=null)
+
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
                                     modifier = Modifier.padding(horizontal =  16.dp)
@@ -439,7 +440,7 @@ fun ShowEditSystemContent(
                                             checkedBorderColor = swampGreen,
                                             checkedThumbColor = swampGreen,
                                         ),
-                                        checked = notiCheck!!,
+                                        checked = notiCheck,
                                         onCheckedChange = {
 
                                             userBoard?.notifications  = !userBoard?.notifications!!
