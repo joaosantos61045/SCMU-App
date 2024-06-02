@@ -35,7 +35,6 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -53,7 +52,6 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.example.scmu_app.others.Board
 import com.example.scmu_app.others.User
-import com.example.scmu_app.others.fetchFindBoard
 import com.example.scmu_app.others.updateBoard
 import com.example.scmu_app.others.updateUser
 import com.example.scmu_app.ui.theme.CreateDefaultScaffold
@@ -80,14 +78,14 @@ class EditSystem : ComponentActivity() {
                 val systemName = intent.getStringExtra("systemName")!!
                 val board: Board =Gson().fromJson(intent.getStringExtra("board"),Board::class.java)
                 val sysId=intent.getStringExtra("systemId")!!
-                    MyAppContent(user,systemName,sysId,board)
+                    MyAppContent(user,systemName,sysId,board,this)
             }
         }
     }//onResume
 }
 
 @Composable
-fun MyAppContent(user: User, systemName: String, sysId: String, board: Board) {
+fun MyAppContent(user: User, systemName: String, sysId: String, board: Board, clazz: EditSystem) {
     // Initialize the board with default values
     //var board by remember { mutableStateOf<Board?>(null) }
 
@@ -108,7 +106,7 @@ fun MyAppContent(user: User, systemName: String, sysId: String, board: Board) {
 
         // Only show content after data has been fetched
 
-            ShowEditSystemContent(systemName , sysId, board,user,showLoading)
+            ShowEditSystemContent(systemName , sysId, board,user,showLoading,clazz)
 
     }
 }
@@ -120,7 +118,8 @@ fun ShowEditSystemContent(
     sysId: String,
     board: Board?,
     user: User,
-    showLoading: MutableState<Boolean>
+    showLoading: MutableState<Boolean>,
+    clazz: EditSystem
 ) {
     val context = LocalContext.current
     val hourIntervals = mutableListOf<String>()
@@ -170,6 +169,7 @@ fun ShowEditSystemContent(
                                     putExtra("systemId", sysId)
                                 }
                                 context.startActivity(intent)
+                                clazz.finish()
                             })
                     }) {
                     Icon(
@@ -546,6 +546,7 @@ fun ShowEditSystemContent(
                             showLoading.value=false;
                             val intent = Intent(context, MainScreen::class.java)
                             context.startActivity(intent)
+                            clazz.finish()
 
                         },user)
                         showDialog.value = false

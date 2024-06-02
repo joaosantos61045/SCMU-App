@@ -3,16 +3,13 @@ package com.example.scmu_app
 
 import android.annotation.SuppressLint
 import android.content.ContentResolver
-import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.os.Build
 
 import androidx.compose.runtime.Composable
 
 import android.os.Bundle
 import android.provider.Settings
-import android.util.Log
 
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -40,8 +37,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.example.scmu_app.others.User
 import com.example.scmu_app.others.UserBoard
@@ -70,7 +65,7 @@ class MainScreen : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             SCMUAppTheme {
-                PreMain(this.contentResolver)
+                PreMain(this.contentResolver,this)
             }
         }
 
@@ -80,7 +75,7 @@ class MainScreen : ComponentActivity() {
 
 @RequiresApi(Build.VERSION_CODES.S)
 @Composable
-fun PreMain(contextResolver: ContentResolver) {
+fun PreMain(contextResolver: ContentResolver, clazz: MainScreen) {
 
     val showDialog = remember { mutableStateOf(false) }
     val showLoading = remember { mutableStateOf(true) }
@@ -96,7 +91,7 @@ fun PreMain(contextResolver: ContentResolver) {
     )
 
     CreateDefaultScaffold(showLoading.value) {
-        ShowMain(user, showDialog, showLoading)
+        ShowMain(user, showDialog, showLoading,clazz)
     }
 }
 
@@ -105,7 +100,8 @@ fun PreMain(contextResolver: ContentResolver) {
 fun ShowMain(
     user: MutableState<User>,
     showDialog: MutableState<Boolean>,
-    showLoading: MutableState<Boolean>
+    showLoading: MutableState<Boolean>,
+    clazz: MainScreen
 ) {
     Column(
         modifier = Modifier
@@ -130,6 +126,7 @@ fun ShowMain(
                 val intent = Intent(context, BluetoothDevices::class.java)
 
                 context.startActivity(intent)
+                clazz.finish()
 
         }) {
 
@@ -171,7 +168,7 @@ fun ShowMain(
                         ) {
                             items(user.value.boards) { board ->
 
-                                SystemItem(name = board.name, id = board.board, user.value)
+                                SystemItem(name = board.name, id = board.board, user.value,clazz)
                             }
                         }
 
@@ -201,7 +198,7 @@ fun ShowMain(
         }
 
         if (showDialog.value)
-            SystemListDialog(user, showDialog, showLoading)
+            SystemListDialog(user, showDialog, showLoading,clazz)
     }
 }
 
@@ -210,7 +207,8 @@ fun ShowMain(
 fun SystemListDialog(
     user: MutableState<User>,
     showDialog: MutableState<Boolean>,
-    showLoading: MutableState<Boolean>
+    showLoading: MutableState<Boolean>,
+    clazz: MainScreen
 ) {
     var systemName by remember { mutableStateOf("") }
     var systemId by remember { mutableStateOf("") }
@@ -283,6 +281,7 @@ fun SystemListDialog(
                             }
 
                             context.startActivity(intent)
+                            clazz.finish()
                         },
                         onSuccess = {
                             user.value.boards.add(UserBoard(systemId, systemName, true))
@@ -355,7 +354,7 @@ fun SystemNameDialog(showNameDialog: MutableState<Boolean>) {
 }
 
 @Composable
-fun SystemItem(name: String, id: String, user: User) {
+fun SystemItem(name: String, id: String, user: User,clazz: MainScreen) {
     val context = LocalContext.current
 
     Surface(
@@ -375,6 +374,7 @@ fun SystemItem(name: String, id: String, user: User) {
                     }
 
                 context.startActivity(intent)
+                clazz.finish()
             }
     ) {
 
