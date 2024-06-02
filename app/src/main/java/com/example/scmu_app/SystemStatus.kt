@@ -516,7 +516,7 @@ fun StatusItem(boardInfo: BoardInfo) {
                     lastFetch.value = System.currentTimeMillis()
                 }
 
-                val teoricExecTime = boardInfo.board.duration * 60
+                val teoricExecTime = boardInfo.board.duration!! * 60
                 val percentDone = Math.min(1f, lastTime.value / (teoricExecTime.toFloat()))
 
                 showProgress(percentDone)
@@ -526,7 +526,7 @@ fun StatusItem(boardInfo: BoardInfo) {
 
             if (boardInfo.board.currentState == 2) {
                 Text(
-                    text = "    Next event : ${dateToStandardFormat(getDateTime(boardInfo.board.hourToStart.toLong() * 60))}",
+                    text = "    Next event : ${dateToStandardFormat(getDateTime(boardInfo.board.hourToStart!!.toLong() * 60))}",
                     color = Color.Black,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )

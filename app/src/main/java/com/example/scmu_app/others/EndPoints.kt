@@ -40,7 +40,8 @@ fun fetchBoardInfo(sysId:String, onFailure: () -> Unit, onSuccess: (BoardInfo) -
 
 }
 
-fun fetchFindBoard( arduino: String,  onFailure: () -> Unit, onSuccess: (Board) -> Unit) {
+@SuppressLint("SuspiciousIndentation")
+fun fetchFindBoard(arduino: String, onFailure: () -> Unit, onSuccess: (Board) -> Unit) {
 
     val gson = Gson()
     getRequest(
@@ -54,7 +55,7 @@ fun fetchFindBoard( arduino: String,  onFailure: () -> Unit, onSuccess: (Board) 
                     onSuccess(gson.fromJson(content, Board::class.java))
                 } catch (e: Exception) {
                     if(content != null)
-                    onFailure()
+                        onFailure()
                 }
             }
         })
@@ -71,8 +72,6 @@ fun cancelEvent(status: Int, id: String){
 fun updateBoard( board: Board ,onFailure: () -> Unit, onSuccess: (Board) -> Unit){
 
     val gson = Gson()
-
-
 
     putRequest("$URL/rest/boards/"+board.id+"/user",
         onFailure = {onFailure() },
@@ -97,6 +96,23 @@ fun updateUser(
         onSuccess = {
             it.body?.string().let { content ->
                 onSuccess(gson.fromJson(content, User::class.java))
+            }
+        })
+
+}
+
+fun postBoard(board: Board, onFailure: () -> Unit, onSuccess: (Board) -> Unit) {
+
+    val gson = Gson()
+    postRequest(
+        "$URL/rest/boards",
+        requestBody = gson.toJson(board),
+        onFailure = {
+            onFailure()
+        },
+        onSuccess = {
+            it.body?.string().let { content ->
+                onSuccess(gson.fromJson(content, Board::class.java))
             }
         })
 

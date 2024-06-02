@@ -18,8 +18,8 @@ data class UserBoard(
 data class Board(
     var id: String,
     var active: Boolean,
-    var duration: Int,
-    var hourToStart: Int,
+    var duration: Int?,
+    var hourToStart: Int?,
     var rotation: MutableList<Boolean>,
     var state: Int,
     var currentState: Int,

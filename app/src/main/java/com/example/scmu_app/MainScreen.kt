@@ -117,22 +117,6 @@ fun ShowMain(
                 .height(110.dp)
         )
 
-        val context = LocalContext.current
-        Button(
-            modifier = Modifier.size(40.dp, 40.dp),
-            onClick = {
-
-
-                val intent = Intent(context, BluetoothDevices::class.java)
-
-                context.startActivity(intent)
-                clazz.finish()
-
-        }) {
-
-        }
-
-
         BoxWithConstraints {
             Row(
 
@@ -242,7 +226,6 @@ fun SystemListDialog(
             }
         },
         dismissButton = {
-
             Button(
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.LightGray
@@ -278,6 +261,7 @@ fun SystemListDialog(
                             val intent = Intent(context, AddSystem::class.java).apply {
                                 putExtra("systemName", systemName)
                                 putExtra("systemId", systemId)
+                                putExtra("user", Gson().toJson(user.value))
                             }
 
                             context.startActivity(intent)

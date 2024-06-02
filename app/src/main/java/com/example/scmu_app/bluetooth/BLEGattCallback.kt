@@ -7,6 +7,7 @@ import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothGattDescriptor
 import android.bluetooth.BluetoothGattService
 import android.bluetooth.BluetoothProfile
+import android.os.Handler
 import android.util.Log
 import java.util.UUID
 
@@ -23,17 +24,26 @@ class BLEGattCallback(
     private lateinit var service : BluetoothGattService
     private lateinit var characteristic : BluetoothGattCharacteristic
 
+
+
     override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
         if (newState == BluetoothProfile.STATE_CONNECTED) {
             gatt.discoverServices()
+        } else {
+            onResponse.invoke(3)
+            gatt.disconnect()
+            gatt.close()
         }
+
     }
 
     override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
         super.onServicesDiscovered(gatt, status)
+
         if (status == BluetoothGatt.GATT_SUCCESS) {
             enableNotificationForCharacteristic(gatt)
         }
+
     }
 
     private fun enableNotificationForCharacteristic(gatt: BluetoothGatt) {
