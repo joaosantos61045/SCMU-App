@@ -5,15 +5,19 @@ import android.annotation.SuppressLint
 import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 
 import androidx.compose.runtime.Composable
 
 import android.os.Bundle
 import android.provider.Settings
+import android.util.Log
 
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -36,6 +40,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.example.scmu_app.others.User
 import com.example.scmu_app.others.UserBoard
@@ -55,21 +61,24 @@ import com.google.gson.Gson
 
 class MainScreen : ComponentActivity() {
 
+    @RequiresApi(Build.VERSION_CODES.S)
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         installSplashScreen()
-
         enableEdgeToEdge()
         setContent {
             SCMUAppTheme {
                 PreMain(this.contentResolver)
             }
         }
+
+
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.S)
 @Composable
 fun PreMain(contextResolver: ContentResolver) {
 
@@ -91,6 +100,7 @@ fun PreMain(contextResolver: ContentResolver) {
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.S)
 @Composable
 fun ShowMain(
     user: MutableState<User>,
@@ -115,8 +125,12 @@ fun ShowMain(
         Button(
             modifier = Modifier.size(40.dp, 40.dp),
             onClick = {
-            val intent = Intent(context, BluetoothDevices::class.java)
-            context.startActivity(intent)
+
+
+                val intent = Intent(context, BluetoothDevices::class.java)
+
+                context.startActivity(intent)
+
         }) {
 
         }
@@ -200,6 +214,7 @@ fun SystemListDialog(
 ) {
     var systemName by remember { mutableStateOf("") }
     var systemId by remember { mutableStateOf("") }
+    val context = LocalContext.current
 
     AlertDialog(
         containerColor = mintGreen,
@@ -260,7 +275,14 @@ fun SystemListDialog(
                             showDialog.value = false
                             showLoading.value = false
 
-                            //TODO move to add system
+                            if(systemName.isEmpty() || systemId.isEmpty())
+                                return@fetchFindBoard
+                            val intent = Intent(context, AddSystem::class.java).apply {
+                                putExtra("systemName", systemName)
+                                putExtra("systemId", systemId)
+                            }
+
+                            context.startActivity(intent)
                         },
                         onSuccess = {
                             user.value.boards.add(UserBoard(systemId, systemName, true))
@@ -277,16 +299,6 @@ fun SystemListDialog(
 
                         }
                     )
-                    //if(systemName.isEmpty() || systemId.isEmpty())
-                    //    return@Button
-
-                    //TODO check if the system already exists
-                    /*val intent = Intent(context, AddSystem::class.java).apply {
-                        putExtra("systemName", systemName)
-                        putExtra("systemId", systemId)
-                    }
-
-                    context.startActivity(intent)*/
 
                     showDialog.value = false
                 }) {

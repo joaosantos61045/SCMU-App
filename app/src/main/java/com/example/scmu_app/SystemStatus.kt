@@ -82,15 +82,13 @@ class SystemStatus : ComponentActivity() {
 
                 val systemName = intent.getStringExtra("systemName")!!
                 val sysId = intent.getStringExtra("systemId")!!
-                val notiSystem= StateNotificationService(LocalContext.current)
+                val notiSystem = StateNotificationService(LocalContext.current)
 
                 notiSystem.createNotificationChannel()
-                PreSystemStatusContent(systemName, user, sysId,notiSystem)
-                Log.w("Notification","onCreate")
+                PreSystemStatusContent(systemName, user, sysId, notiSystem, this)
             }
         }
     }
-
 
 }
 
@@ -98,18 +96,15 @@ class SystemStatus : ComponentActivity() {
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun PreSystemStatusContent(
-    systemName: String,
-    user: User,
-    sysId: String,
-    notiSystem: StateNotificationService
+    systemName: String, user: User, sysId: String, notiSystem: StateNotificationService, clazz : SystemStatus
 ) {
 
     val showLoading = remember { mutableStateOf(true) }
     val boardInfo: MutableState<BoardInfo?> = remember { mutableStateOf(null) }
     val events = remember { mutableStateOf<MutableList<Event>?>(null) }
     val currentDate = remember { mutableStateOf(0L) }
-    var state= remember { mutableStateOf(4) }
-    DisposableEffect(Unit) {
+    var state = remember { mutableStateOf(2) }
+    DisposableEffect(1) {
         val scope = CoroutineScope(Dispatchers.Main)
 
 
@@ -118,34 +113,35 @@ fun PreSystemStatusContent(
                 if (System.currentTimeMillis() - currentDate.value > 1000) {
 
                     currentDate.value = System.currentTimeMillis()
+                    fetchBoardInfo(sysId, onFailure = {}, onSuccess = { board ->
+                        showLoading.value = false
+                        boardInfo.value = board
+
+                        board.board.lastFetch = System.currentTimeMillis()
+                        val userBoard = user.boards.find { it.board == sysId }!!
 
 
-                    fetchBoardInfo(sysId,
-                        onFailure = {},
-                        onSuccess = {
-                            showLoading.value = false
-                            boardInfo.value = it
-                            boardInfo.value!!.board.lastFetch = System.currentTimeMillis()
-                            Log.w("Notification",user.boards.find {it.board  == sysId }!!.notifications.toString())
-                            if(boardInfo.value!!.board.isOnline() && user.boards.find {it.board  == sysId }!!.notifications)
-                            if(state.value!= boardInfo.value!!.board.currentState ) {
+                        Log.w("Notification", userBoard.notifications.toString())
 
-                                if(state.value==1 && boardInfo.value!!.board.currentState==0) {
+                        if (board.board.isOnline() && userBoard.notifications)
+                            if (state.value != board.board.currentState) {
+
+                                if (state.value == 1 && board.board.currentState == 0) {
                                     Log.w("Notification", "Notification paused to resume")
                                     notiSystem.showBasicNotification(3)
-                                }else if(boardInfo.value!!.board.currentState!=1) {
+                                } else if (board.board.currentState != 1) {
                                     Log.w("Notification", "Notification normal")
-                                    notiSystem.showBasicNotification(boardInfo.value!!.board.currentState)
+                                    notiSystem.showBasicNotification(board.board.currentState)
                                 }
-                                state.value = boardInfo.value!!.board.currentState
+
+                                state.value = board.board.currentState
                             }
 
-                            if (events.value == null || boardInfo.value!!.eventsChanged(events.value!!)) {
-                                events.value = boardInfo.value!!.events
-                            }
-
+                        if (events.value == null || board.eventsChanged(events.value!!)) {
+                            events.value = board.events
                         }
-                    )
+
+                    })
                 }
 
                 delay(1000)
@@ -154,14 +150,14 @@ fun PreSystemStatusContent(
 
         onDispose {
             job.cancel()
-            Log.w("Notification","Dispose")
+            Log.w("Notification", "Dispose")
         }
     }
 
 
 
     CreateDefaultScaffold(showLoading.value) {
-        SystemStatusContent(boardInfo, systemName, user, sysId, events)
+        SystemStatusContent(boardInfo, systemName, user, sysId, events, clazz)
     }
 
 }
@@ -175,7 +171,7 @@ fun SystemStatusContent(
     systemName: String,
     user: User,
     sysId: String,
-    events: MutableState<MutableList<Event>?>
+    events: MutableState<MutableList<Event>?>, clazz : SystemStatus
 ) {
 
     val context = LocalContext.current
@@ -196,17 +192,16 @@ fun SystemStatusContent(
                     .zIndex(1000f),
                 horizontalArrangement = Arrangement.End
             ) {
-                IconButton(
-                    modifier = Modifier
-                        .background(
-                            color = com.example.scmu_app.ui.theme.darkGreen,
-                            shape = RoundedCornerShape(15.dp)
-                        )
-                        .padding(10.dp, 5.dp),
-                    onClick = {
-                        val intent = Intent(context, MainScreen::class.java)
-                        context.startActivity(intent)
-                    }) {
+                IconButton(modifier = Modifier
+                    .background(
+                        color = darkGreen,
+                        shape = RoundedCornerShape(15.dp)
+                    )
+                    .padding(10.dp, 5.dp), onClick = {
+                    val intent = Intent(context, MainScreen::class.java)
+                    context.startActivity(intent)
+                    clazz.finish()
+                }) {
                     Icon(
                         Icons.Filled.ArrowBack,
                         contentDescription = "Go back",
@@ -249,8 +244,7 @@ fun SystemStatusContent(
                     BoxWithConstraints {
                         createTile("Information:")
                         Row(
-                            Modifier
-                                .offset(0.dp, 20.dp)
+                            Modifier.offset(0.dp, 20.dp)
                         ) {
                             Column(
                                 Modifier
@@ -259,7 +253,7 @@ fun SystemStatusContent(
                             ) {
 
                                 boardInfo.value?.let {
-                                    InfoItem(it, systemName, user, sysId,it.board)
+                                    InfoItem(it, systemName, user, sysId, it.board, clazz)
                                 }
 
 
@@ -270,32 +264,30 @@ fun SystemStatusContent(
                     }
                     Spacer(modifier = Modifier.size(0.dp, 40.dp))
 
-                        if(boardInfo.value!=null && boardInfo.value!!.board.isOnline()){
-                    BoxWithConstraints {
-                        createTile("Events:")
-                        Row(
-                            Modifier
-                                .offset(0.dp, 20.dp)
-                        ) {
-                            Column(
-                                Modifier
-                                    .background(mintGreen)
-                                    .offset(0.dp, 30.dp)
+                    if (boardInfo.value != null && boardInfo.value!!.board.isOnline()) {
+                        BoxWithConstraints {
+                            createTile("Events:")
+                            Row(
+                                Modifier.offset(0.dp, 20.dp)
                             ) {
-                                boardInfo.value?.let {
-                                    StatusItem(it)
+                                Column(
+                                    Modifier
+                                        .background(mintGreen)
+                                        .offset(0.dp, 30.dp)
+                                ) {
+                                    boardInfo.value?.let {
+                                        StatusItem(it)
+                                    }
+                                    Spacer(modifier = Modifier.size(0.dp, 40.dp))
                                 }
-                                Spacer(modifier = Modifier.size(0.dp, 40.dp))
                             }
                         }
+                        Spacer(modifier = Modifier.size(0.dp, 40.dp))
                     }
-                    Spacer(modifier = Modifier.size(0.dp, 40.dp))
-                        }
                     BoxWithConstraints {
                         createTile("History:")
                         Row(
-                            Modifier
-                                .offset(0.dp, 20.dp)
+                            Modifier.offset(0.dp, 20.dp)
                         ) {
                             Column(
                                 Modifier
@@ -318,12 +310,10 @@ fun SystemStatusContent(
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 private fun ListEvents(events: MutableState<MutableList<Event>?>) {
-    if (events.value == null)
-        return
+    if (events.value == null) return
 
     for (item in events.value!!.reversed()) {
-        if (item.eventState != 2)
-            HistoryItem(item)
+        if (item.eventState != 2) HistoryItem(item)
     }
 }
 
@@ -389,12 +379,11 @@ fun HistoryItem(item: Event) {
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun InfoItem(boardInfo: BoardInfo, systemName: String, user: User, sysId: String, board: Board) {
+fun InfoItem(boardInfo: BoardInfo, systemName: String, user: User, sysId: String, board: Board, clazz : SystemStatus) {
     val context = LocalContext.current
 
     Row(
-        modifier = Modifier.padding(0.dp),
-        verticalAlignment = Alignment.CenterVertically
+        modifier = Modifier.padding(0.dp), verticalAlignment = Alignment.CenterVertically
     ) {
         Image(
             painter = painterResource(id = R.drawable.image01),
@@ -408,12 +397,8 @@ fun InfoItem(boardInfo: BoardInfo, systemName: String, user: User, sysId: String
             modifier = Modifier.weight(1f)
         ) {
             Text(
-                text = systemName,
-                color = Color.Black,
-                style = androidx.compose.ui.text.TextStyle(
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black
+                text = systemName, color = Color.Black, style = androidx.compose.ui.text.TextStyle(
+                    fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color.Black
                 )
             )
 
@@ -422,9 +407,7 @@ fun InfoItem(boardInfo: BoardInfo, systemName: String, user: User, sysId: String
                     text = "   Status: ",
                     color = Color.Black,
                     style = androidx.compose.ui.text.TextStyle(
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Black
+                        fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.Black
                     ),
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
@@ -432,9 +415,7 @@ fun InfoItem(boardInfo: BoardInfo, systemName: String, user: User, sysId: String
                     text = if (boardInfo.board.isOnline()) "Online" else "Offline",
                     color = if (boardInfo.board.isOnline()) swampGreen else Color.Red,
                     style = androidx.compose.ui.text.TextStyle(
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Black
+                        fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.Black
                     ),
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
@@ -452,12 +433,12 @@ fun InfoItem(boardInfo: BoardInfo, systemName: String, user: User, sysId: String
                         putExtra("user", Gson().toJson(user))
                         putExtra("systemName", systemName)
                         putExtra("systemId", sysId)
-                        putExtra("board",Gson().toJson(board))
+                        putExtra("board", Gson().toJson(board))
 
                     }
 
-
                     context.startActivity(intent)
+                    clazz.finish()
                 },
                 modifier = Modifier
                     .size(50.dp)
@@ -470,7 +451,7 @@ fun InfoItem(boardInfo: BoardInfo, systemName: String, user: User, sysId: String
                     contentDescription = "Settings",
                     modifier = Modifier.size(35.dp),
                     tint = Color.White,
-                    )
+                )
             }
         }
     }
@@ -485,10 +466,9 @@ fun StatusItem(boardInfo: BoardInfo) {
     val targetValue = remember { mutableStateOf(0F) }
     val lastFetch = remember { mutableStateOf(System.currentTimeMillis()) }
     var shouldShow = boardInfo.board.currentState < 2
-    var state= remember { mutableStateOf(boardInfo.board.state) }
+    var state = remember { mutableStateOf(boardInfo.board.state) }
     Row(
-        modifier = Modifier.padding(top = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
+        modifier = Modifier.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically
     ) {
 
         Column(
@@ -500,9 +480,7 @@ fun StatusItem(boardInfo: BoardInfo) {
                 text = "State: ${boardInfo.board.getStates()}",
                 color = Color.Black,
                 style = androidx.compose.ui.text.TextStyle(
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black
+                    fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color.Black
                 ),
                 modifier = Modifier
             )
@@ -511,13 +489,13 @@ fun StatusItem(boardInfo: BoardInfo) {
 
                 val job = scope.launch {
                     while (isActive) {
-                        if (boardInfo.board.currentState == 0) {
-                            val stepSize = (targetValue.value - lastTime.value) / 5F
-                            lastTime.value += stepSize
-                            lastTime.value = lastTime.value.coerceAtMost(targetValue.value)
-                        }
-                        if(boardInfo.board.currentState==2)
-                        state.value=boardInfo.board.state
+                        if (state.value == -1 && boardInfo.board.currentState != 2)
+                            if (boardInfo.board.currentState == 0) {
+                                val stepSize = (targetValue.value - lastTime.value) / 5F
+                                lastTime.value += stepSize
+                                lastTime.value = lastTime.value.coerceAtMost(targetValue.value)
+                            }
+                        if (boardInfo.board.currentState == 2) state.value = boardInfo.board.state
 
                         delay(300)
                     }
@@ -533,7 +511,8 @@ fun StatusItem(boardInfo: BoardInfo) {
 
                 if (boardInfo.board.currentState == 0 && System.currentTimeMillis() - lastFetch.value > 1000) {
                     val lastEvent = boardInfo.events[boardInfo.events.size - 1]
-                    targetValue.value = ((boardInfo.board.currentDate - lastEvent.start) - lastEvent.pausedTime).toFloat()
+                    targetValue.value =
+                        ((boardInfo.board.currentDate - lastEvent.start) - lastEvent.pausedTime).toFloat()
                     lastFetch.value = System.currentTimeMillis()
                 }
 
@@ -541,12 +520,11 @@ fun StatusItem(boardInfo: BoardInfo) {
                 val percentDone = Math.min(1f, lastTime.value / (teoricExecTime.toFloat()))
 
                 showProgress(percentDone)
-            //shouldShow=boardInfo.board.currentState < 2
-            } else
-                lastTime.value = 0F
+                //shouldShow=boardInfo.board.currentState < 2
+            } else lastTime.value = 0F
 
 
-            if(boardInfo.board.currentState == 2) {
+            if (boardInfo.board.currentState == 2) {
                 Text(
                     text = "    Next event : ${dateToStandardFormat(getDateTime(boardInfo.board.hourToStart.toLong() * 60))}",
                     color = Color.Black,
@@ -566,12 +544,13 @@ fun StatusItem(boardInfo: BoardInfo) {
             modifier = Modifier.padding(end = 15.dp)
         ) {
 
-            if (state.value==-1 && boardInfo.board.currentState!=2)
+            if (state.value == -1 && boardInfo.board.currentState != 2)
 
                 IconButton(
                     onClick = {
 
-                        showDialog.value = true },
+                        showDialog.value = true
+                    },
                     modifier = Modifier
                         .size(50.dp)
                         .background(shape = RoundedCornerShape(15.dp), color = swampGreen)
@@ -604,28 +583,24 @@ fun StatusItem(boardInfo: BoardInfo) {
                 }
             },
             dismissButton = {
-                Button(
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.LightGray
-                    ),
-                    onClick = { showDialog.value = false }) {
+                Button(colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.LightGray
+                ), onClick = { showDialog.value = false }) {
                     Text("Cancel", color = Color.Black)
                 }
             },
             confirmButton = {
                 Button(colors = ButtonDefaults.buttonColors(
                     containerColor = darkGreen
-                ),
-                    onClick = {
+                ), onClick = {
 
-                        showDialog.value = false
-                        state.value=2
-                        boardInfo.board.state=2
-                       // cancelEvent(2, boardInfo.board.id)
-                        updateBoard(boardInfo.board,{},{
-                        })
+                    showDialog.value = false
+                    state.value = 2
+                    boardInfo.board.state = 2
+                    // cancelEvent(2, boardInfo.board.id)
+                    updateBoard(boardInfo.board, {}, {})
 
-                    }) {
+                }) {
 
                     Text("Confirm", color = Color.White)
                 }

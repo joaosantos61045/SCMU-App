@@ -80,3 +80,8 @@ data class BoardInfo(
         return false
     }
 }
+
+data class WIFICred(
+    val ssid: String,
+    val pwd: String
+)

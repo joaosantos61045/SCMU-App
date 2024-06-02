@@ -229,7 +229,7 @@ fun ShowManageSystemContent(canDelete: Boolean, sysName: String, sysId: String) 
                                     Dropdown(
                                         "",
                                         timeDurations,
-                                        "Duration",
+                                        "0",
                                     )
                                 }
 
@@ -247,13 +247,13 @@ fun ShowManageSystemContent(canDelete: Boolean, sysName: String, sysId: String) 
                                     Dropdown(
                                         "",
                                         hourIntervals,
-                                        "H",
+                                        "0",
                                     )
                                     Spacer(modifier = Modifier.size(10.dp, 0.dp))
                                     Dropdown(
                                         "",
                                         minuteIntervals,
-                                        "M",
+                                        "0",
                                     )
                                 }
 
@@ -546,7 +546,6 @@ fun TextBox(label: String, value: String = "", password: Boolean = false): Strin
     return textValue;
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Dropdown(label: String, options: List<String>, initialValue: String): Int {
 
