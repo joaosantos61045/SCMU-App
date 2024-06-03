@@ -1,10 +1,16 @@
 package com.example.scmu_app.others
 
-import com.google.gson.annotations.Expose
+import android.icu.util.TimeZone
 import android.os.Build
 import androidx.annotation.RequiresApi
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.ZoneId
+import java.time.ZoneOffset
+import java.time.ZonedDateTime
+import java.util.Calendar
 
-data class User (
+data class User(
     val id: String,
     var boards: MutableList<UserBoard>
 )
@@ -24,17 +30,33 @@ data class Board(
     var state: Int,
     var currentState: Int,
     var currentDate: Long,
-    var lastUpdate: Long,
+    val lastUpdate: Long,
+    var smart: Boolean,
+    val currentTemp: Float,
+    val currentHum: Float,
+    private val timeZone: String?,
+    var password : String,
     @Transient var lastFetch: Long
 
-    ) {
-   fun isOnline():Boolean{return System.currentTimeMillis()/1000 - lastUpdate < 10  }
+) {
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun getLocalTimeZone(): ZoneId {
+        if (timeZone == null)
+            return ZoneOffset.UTC
+        return ZoneId.of(timeZone)
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun isOnline(): Boolean {
+        val time = ZonedDateTime.now(getLocalTimeZone())
+        val tt = time.toEpochSecond()+time.offset.totalSeconds
+        return tt - lastUpdate < 15
+    }
+
     fun getStates(): String {
         val statusList = listOf("Running", "Paused", "Waiting")
         return statusList[currentState]
-
     }
-
 }
 
 data class Event(
@@ -65,15 +87,16 @@ data class BoardInfo(
     val events: MutableList<Event>
 ) {
     @RequiresApi(Build.VERSION_CODES.O)
-    fun eventsChanged(other: MutableList<Event>): Boolean {
-        if(events.size != other.size)
+    fun eventsChanged(other: MutableList<Event>?): Boolean {
+        if (other == null) return true
+        if (events.size != other.size)
             return true
 
-        for(i in 0..<events.size) {
+        for (i in 0..<events.size) {
             val thisTime = getDateTime(events[i].start)
             val otherTime = getDateTime(other[i].start)
 
-            if(thisTime != otherTime)
+            if (thisTime != otherTime)
                 return true
         }
 

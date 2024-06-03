@@ -73,6 +73,7 @@ class MainScreen : ComponentActivity() {
     }
 }
 
+@SuppressLint("HardwareIds")
 @RequiresApi(Build.VERSION_CODES.S)
 @Composable
 fun PreMain(contextResolver: ContentResolver, clazz: MainScreen) {
@@ -80,6 +81,7 @@ fun PreMain(contextResolver: ContentResolver, clazz: MainScreen) {
     val showDialog = remember { mutableStateOf(false) }
     val showLoading = remember { mutableStateOf(true) }
     val user = remember { mutableStateOf(User("", mutableListOf())) }
+    val boards = remember { mutableStateOf(listOf<UserBoard>()) }
 
     //Fetch user from the database
     fetchUser(User(Settings.Secure.getString(contextResolver, Settings.Secure.ANDROID_ID), mutableListOf()),
@@ -87,11 +89,12 @@ fun PreMain(contextResolver: ContentResolver, clazz: MainScreen) {
         onSuccess = {
             showLoading.value = false
             user.value = it
+            boards.value = it.boards
         }
     )
 
     CreateDefaultScaffold(showLoading.value) {
-        ShowMain(user, showDialog, showLoading,clazz)
+        ShowMain(user, showDialog, showLoading,boards, clazz)
     }
 }
 
@@ -101,6 +104,7 @@ fun ShowMain(
     user: MutableState<User>,
     showDialog: MutableState<Boolean>,
     showLoading: MutableState<Boolean>,
+    boards: MutableState<List<UserBoard>>,
     clazz: MainScreen
 ) {
     Column(
@@ -146,12 +150,12 @@ fun ShowMain(
                             .fillMaxSize()
                     ) {
                         Spacer(modifier = Modifier.height(40.dp))
+
                         LazyColumn(
                             userScrollEnabled = true,
                             modifier = Modifier.padding(bottom = 65.dp)
                         ) {
-                            items(user.value.boards) { board ->
-
+                            items(boards.value) { board ->
                                 SystemItem(name = board.name, id = board.board, user.value,clazz)
                             }
                         }
@@ -182,7 +186,7 @@ fun ShowMain(
         }
 
         if (showDialog.value)
-            SystemListDialog(user, showDialog, showLoading,clazz)
+            SystemListDialog(user, showDialog, showLoading,boards,clazz)
     }
 }
 
@@ -192,10 +196,12 @@ fun SystemListDialog(
     user: MutableState<User>,
     showDialog: MutableState<Boolean>,
     showLoading: MutableState<Boolean>,
+    boards: MutableState<List<UserBoard>>,
     clazz: MainScreen
 ) {
     var systemName by remember { mutableStateOf("") }
     var systemId by remember { mutableStateOf("") }
+    var systemPassword by remember { mutableStateOf("") }
     val context = LocalContext.current
 
     AlertDialog(
@@ -221,6 +227,12 @@ fun SystemListDialog(
                     value = "",
                     label = "ID",
                     password = false
+                )
+
+                systemPassword = TextBox(
+                    value = "",
+                    label = "Password",
+                    password = true
                 )
 
             }
@@ -251,16 +263,16 @@ fun SystemListDialog(
                     }
 
                     showLoading.value = true
-                    fetchFindBoard(systemId,
+                    fetchFindBoard(systemId,null,
                         onFailure = {
                             showDialog.value = false
                             showLoading.value = false
-
-                            if(systemName.isEmpty() || systemId.isEmpty())
+                            if(systemName.isEmpty() || systemId.isEmpty() || systemPassword.isEmpty())
                                 return@fetchFindBoard
                             val intent = Intent(context, AddSystem::class.java).apply {
                                 putExtra("systemName", systemName)
                                 putExtra("systemId", systemId)
+                                putExtra("systemPassword", systemPassword)
                                 putExtra("user", Gson().toJson(user.value))
                             }
 
@@ -268,16 +280,22 @@ fun SystemListDialog(
                             clazz.finish()
                         },
                         onSuccess = {
-                            user.value.boards.add(UserBoard(systemId, systemName, true))
-                            updateUser(
-                                onFailure = {
-                                    showDialog.value = false
-                                    showLoading.value = false},
+                            fetchFindBoard(systemId,systemPassword,
                                 onSuccess = {
-                                    user.value = it
-                                    showDialog.value = false
-                                    showLoading.value = false
-                                }, user.value
+                                    user.value.boards.add(UserBoard(systemId, systemName, true))
+                                    updateUser(
+                                        onFailure = {
+                                            showLoading.value = false
+                                            },
+                                        onSuccess = {
+                                            showLoading.value = false
+                                            user.value = it
+                                            boards.value = it.boards;
+                                        }, user.value
+                                    )
+
+                                },
+                                onFailure = {showDialog.value = false}
                             )
 
                         }

@@ -41,11 +41,11 @@ fun fetchBoardInfo(sysId:String, onFailure: () -> Unit, onSuccess: (BoardInfo) -
 }
 
 @SuppressLint("SuspiciousIndentation")
-fun fetchFindBoard(arduino: String, onFailure: () -> Unit, onSuccess: (Board) -> Unit) {
+fun fetchFindBoard(arduino: String, password: String?, onFailure: () -> Unit, onSuccess: (Board) -> Unit) {
 
     val gson = Gson()
     getRequest(
-        "$URL/rest/boards/$arduino/",
+        "$URL/rest/boards/$arduino" + if(password != null) "?password=$password" else "",
         onFailure = {
             onFailure()
         },
@@ -63,11 +63,8 @@ fun fetchFindBoard(arduino: String, onFailure: () -> Unit, onSuccess: (Board) ->
 }
 
 fun cancelEvent(status: Int, id: String){
-
     val gson = Gson()
     putRequest("$URL/rest/boards/$id/request?request=$status", onFailure = { }, onSuccess = {}, requestBody =null)
-
-
 }
 fun updateBoard( board: Board ,onFailure: () -> Unit, onSuccess: (Board) -> Unit){
 

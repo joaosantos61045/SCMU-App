@@ -50,7 +50,7 @@ class BLEScanCallback(
     override fun onScanResult(callbackType: Int, result: ScanResult?) {
         super.onScanResult(callbackType, result)
 
-        if (result != null && result.device != null) {
+        if (result != null && result.device != null && result.device.name != null) {
             val name = result.device.name
 
             if (!devices.containsKey(name)) {

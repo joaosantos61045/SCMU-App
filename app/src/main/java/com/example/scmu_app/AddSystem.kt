@@ -75,20 +75,15 @@ class AddSystem : ComponentActivity() {
 
                 val systemName = intent.getStringExtra("systemName")!!
                 val sysId = intent.getStringExtra("systemId")!!
+                val sysPassword = intent.getStringExtra("systemPassword")!!
                 val user = Gson().fromJson(intent.getStringExtra("user"), User::class.java)
                 val board = Board(
-                    sysId,
-                    true,
-                    null,
-                    null,
+                    sysId, true, null, null,
                     mutableListOf(false, false, false, false, false, false, false),
-                    0,
-                    0,
-                    0,
-                    0,
-                    0
+                    0, 0, 0, 0, true, 0F,
+                    0F, null, sysPassword, 0
                 )
-                MyAppContent(user, systemName, sysId, board, bluetooth, false, this)
+                MyAppContent(user, systemName, sysId, board, bluetooth, false, this, sysPassword)
             }
         }
     }

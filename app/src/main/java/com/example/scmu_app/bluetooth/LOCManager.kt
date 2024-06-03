@@ -7,6 +7,7 @@ import android.bluetooth.le.BluetoothLeScanner
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.location.LocationManager
 import android.os.Build
 import android.provider.Settings
 import android.util.Log
@@ -14,38 +15,33 @@ import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
+import androidx.core.content.ContextCompat.getSystemService
 
-class BLEManager(
+class LOCManager(
     private val activity: ComponentActivity
 ) {
 
-    private var mBluetoothAdapter: BluetoothAdapter? = null
-    private var mScanCallback: BLEScanCallback
-    private var mBluetoothLeScanner: BluetoothLeScanner
-    private var rpl: ActivityResultLauncher<Array<String>>
-    private var bluetoothActivityResultLauncher: ActivityResultLauncher<Intent>
+    private var locationManager:LocationManager = activity.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+    private var isGpsEnabled: Boolean = false
+    private var isNetworkEnabled: Boolean = false
     private var REQUIRED_PERMISSIONS: Array<String>
-    private var locManager : LOCManager
+    private var rpl: ActivityResultLauncher<Array<String>>
+    private var locationActivityResultLauncher: ActivityResultLauncher<Intent>
 
     init {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             REQUIRED_PERMISSIONS = arrayOf(
-                Manifest.permission.BLUETOOTH_SCAN,
-                Manifest.permission.BLUETOOTH_CONNECT,
-                Manifest.permission.BLUETOOTH_ADVERTISE
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION
             )
         } else {
             REQUIRED_PERMISSIONS = arrayOf(
-                Manifest.permission.BLUETOOTH,
-                Manifest.permission.BLUETOOTH_ADMIN,
-                Manifest.permission.ACCESS_FINE_LOCATION
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION
             )
         }
 
-        locManager = LOCManager(activity)
-        mBluetoothLeScanner = BluetoothAdapter.getDefaultAdapter().bluetoothLeScanner
-
-        bluetoothActivityResultLauncher = activity.registerForActivityResult(
+        locationActivityResultLauncher = activity.registerForActivityResult(
             ActivityResultContracts.StartActivityForResult()
         ) { }
 
@@ -55,10 +51,9 @@ class BLEManager(
             var granted = true
             for ((key, value) in isGranted)
                 if (!value) granted = false
-            if (granted) startbt()
+            if (granted) startlc()
         }
 
-        mScanCallback = BLEScanCallback(mBluetoothLeScanner)
     }
 
     private fun allPermissionsGranted(): Boolean {
@@ -74,35 +69,26 @@ class BLEManager(
     }
 
     fun start() {
-        if (isConnected() && locManager.isConnected())
+        if (isConnected())
             return
 
         if (!allPermissionsGranted()) rpl.launch(REQUIRED_PERMISSIONS)
-        else startbt()
+        else startlc()
 
     }
 
-    private fun startbt() {
-        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
-        if (mBluetoothAdapter == null)
-            return
+    private fun startlc() {
+        isGpsEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
+        isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
 
-        if(!locManager.isConnected())
-            locManager.start()
-        if (!mBluetoothAdapter!!.isEnabled) {
-            val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
-            bluetoothActivityResultLauncher.launch(enableBtIntent)
+        if (!isGpsEnabled && !isNetworkEnabled) {
+            val enableLocationIntent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+            locationActivityResultLauncher.launch(enableLocationIntent)
         }
     }
 
     fun isConnected(): Boolean {
-        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
-        if (mBluetoothAdapter == null)
-            return false;
-        return mBluetoothAdapter!!.isEnabled
+        return isGpsEnabled && isNetworkEnabled
     }
 
-    fun getScan(): BLEScanCallback {
-        return mScanCallback
-    }
 }

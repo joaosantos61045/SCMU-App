@@ -32,27 +32,22 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ElevatedButton
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -64,10 +59,8 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.zIndex
 import com.example.scmu_app.bluetooth.BLEGattCallback
 import com.example.scmu_app.bluetooth.BLEManager
@@ -75,7 +68,7 @@ import com.example.scmu_app.others.Board
 import com.example.scmu_app.others.User
 import com.example.scmu_app.others.UserBoard
 import com.example.scmu_app.others.WIFICred
-import com.example.scmu_app.others.fetchFindBoard
+import com.example.scmu_app.others.convertTo
 import com.example.scmu_app.others.postBoard
 import com.example.scmu_app.others.updateBoard
 import com.example.scmu_app.others.updateUser
@@ -103,7 +96,9 @@ class EditSystem : ComponentActivity() {
                 val board: Board =
                     Gson().fromJson(intent.getStringExtra("board"), Board::class.java)
                 val sysId = intent.getStringExtra("systemId")!!
-                MyAppContent(user, systemName, sysId, board, bluetooth, true, this)
+
+
+                MyAppContent(user, systemName, sysId, board, bluetooth, true, this, "")
             }
         }
     }
@@ -117,7 +112,8 @@ fun MyAppContent(
     board: Board,
     bluetooth: BLEManager,
     editSystem: Boolean,
-    clazz: ComponentActivity
+    clazz: ComponentActivity,
+    password: String
 ) {
 
     val showLoading = remember { mutableStateOf(false) }
@@ -130,7 +126,7 @@ fun MyAppContent(
             showLoading,
             bluetooth,
             editSystem,
-            clazz
+            clazz, password
         )
     }
 }
@@ -146,7 +142,8 @@ fun ShowEditSystemContent(
     showLoading: MutableState<Boolean>,
     bluetooth: BLEManager,
     editSystem: Boolean,
-    clazz: ComponentActivity
+    clazz: ComponentActivity,
+    password: String
 ) {
     val context = LocalContext.current
     val hourIntervals = mutableListOf<String>()
@@ -155,8 +152,8 @@ fun ShowEditSystemContent(
     for (i in 0..59) minuteIntervals.add(i.toString())
 
     val name = remember { mutableStateOf(sysName) }
-    val credId = remember { mutableStateOf("") }
-    val credPwd = remember { mutableStateOf("") }
+    val credId = remember { mutableStateOf(board!!.id) }
+    val credPwd = remember { mutableStateOf(password) }
     val showCredentials = remember { mutableStateOf(false) }
 
     val wifiSSID = remember { mutableStateOf("") }
@@ -210,7 +207,8 @@ fun ShowEditSystemContent(
                 ),
                     onClick = {
                         showLoading.value = true
-                        user.boards.removeIf { it.board.equals(sysId) }
+                        val clone = user.copy(boards = user.boards.toMutableList())
+                        clone.boards.removeIf { it.board == sysId }
                         updateUser({
                             showLoading.value = false
                         }, {
@@ -219,8 +217,7 @@ fun ShowEditSystemContent(
                             context.startActivity(intent)
                             clazz.finish()
 
-                        }, user)
-                        showDialog.value = false
+                        }, clone)
 
                     }) {
 
@@ -254,10 +251,11 @@ fun ShowEditSystemContent(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    credId.value = TextBox(
+                    TextBox(
                         value = credId.value,
                         label = "ID",
-                        password = false
+                        password = false,
+                        enabled = false
                     )
                     credPwd.value = TextBox(
                         value = credPwd.value,
@@ -333,7 +331,7 @@ fun ShowEditSystemContent(
                         if (editSystem) {
                             showLoading.value = true
                             updateUser({}, {}, user)
-                            if (board != null)
+                            if (board != null) {
                                 updateBoard(board, { showLoading.value = true }, {
                                     showLoading.value = false
                                     val intent = Intent(context, SystemStatus::class.java).apply {
@@ -347,6 +345,7 @@ fun ShowEditSystemContent(
                                     context.startActivity(intent)
                                     clazz.finish()
                                 })
+                            }
                         } else {
                             val intent = Intent(context, MainScreen::class.java)
                             context.startActivity(intent)
@@ -437,11 +436,9 @@ fun ShowEditSystemContent(
                                     val blueDevices =
                                         remember { mutableStateOf(listOf<BluetoothDevice>()) }
 
-
                                     bluetooth.getScan().setOnResultChange {
                                         blueDevices.value = it.values.toList()
                                     }
-
 
                                     Button(
                                         colors = ButtonDefaults.buttonColors(
@@ -530,21 +527,27 @@ fun ShowEditSystemContent(
                                             modifier = Modifier.padding(22.dp, 10.dp, 20.dp, 0.dp)
                                         )
 
-                                        val hour: Int? = Dropdown(
+                                        val hT =
+                                            remember { mutableStateOf(if (board.hourToStart != null) board.hourToStart!! / 60 else null) }
+                                        val mT =
+                                            remember { mutableStateOf(if (board.hourToStart != null) board.hourToStart!! % 60 else null) }
+
+                                        hT.value = Dropdown(
                                             "",
                                             hourIntervals,
-                                            if (board.hourToStart != null) (board.hourToStart!! / 60).toString() else null,
+                                            if (board.hourToStart != null) hT.value.toString() else null,
                                         )
+
                                         Spacer(modifier = Modifier.size(10.dp, 0.dp))
 
-                                        val minute: Int? = Dropdown(
+                                        mT.value = Dropdown(
                                             "",
                                             minuteIntervals,
-                                            if (board.hourToStart != null) (board.hourToStart!! % 60).toString() else null,
+                                            if (board.hourToStart != null) mT.value.toString() else null,
                                         )
 
-                                        if (hour != null && minute != null)
-                                            board.hourToStart = hour * 60 + minute
+                                        if (hT.value != null && mT.value != null)
+                                            board.hourToStart = hT.value!! * 60 + mT.value!!
 
                                         changed.value = !changed.value
                                     }
@@ -613,6 +616,7 @@ fun ShowEditSystemContent(
                                     ) {
 
                                         var isChecked by remember { mutableStateOf(board.active) }
+                                        var isChecked1 by remember { mutableStateOf(board.smart) }
                                         var userBoard = user.boards.find { it.board == sysId }
                                         var notiCheck by remember { mutableStateOf(userBoard!!.notifications) }
 
@@ -621,7 +625,7 @@ fun ShowEditSystemContent(
                                             modifier = Modifier.padding(horizontal = 16.dp)
                                         ) {
                                             Text(
-                                                text = "Smart Watering",
+                                                text = "Active",
                                                 style = TextStyle(
                                                     fontSize = 18.sp,
                                                     fontWeight = FontWeight.Bold,
@@ -643,6 +647,39 @@ fun ShowEditSystemContent(
 
                                                     board.active = !board.active
                                                     isChecked = board.active
+                                                }
+                                            )
+
+
+                                        }
+
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier = Modifier.padding(horizontal = 16.dp)
+                                        ) {
+                                            Text(
+                                                text = "Smart System",
+                                                style = TextStyle(
+                                                    fontSize = 18.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = Color.Black
+                                                ),
+                                                modifier = Modifier.weight(1f)
+                                            )
+
+                                            Switch(
+                                                colors = SwitchDefaults.colors(
+                                                    checkedTrackColor = darkGreen,
+                                                    checkedIconColor = swampGreen,
+                                                    checkedBorderColor = swampGreen,
+                                                    checkedThumbColor = swampGreen,
+                                                ),
+
+                                                checked = isChecked1,
+                                                onCheckedChange = {
+
+                                                    board.smart = !board.smart
+                                                    isChecked1 = board.smart
                                                 }
                                             )
 
@@ -731,323 +768,356 @@ fun ShowEditSystemContent(
                         Spacer(modifier = Modifier.size(0.dp, 40.dp))
                     }
                     if (!editSystem) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center,
-                            modifier = Modifier.fillMaxWidth()
+                        BoxWithConstraints {
 
-                        ) {
-
-                            if (board != null && (changed.value || !changed.value)) {
-                                Button(
-                                    onClick = {
-
-                                        showLoading.value = true
-
-                                        connectWifi(
-                                            device = device,
-                                            btnBlock = btnBlock,
-                                            context = context,
-                                            credId = credId,
-                                            credPwd = credPwd,
-                                            wifiSSID = wifiSSID,
-                                            wifiPWD = wifiPWD,
-                                            feedText = feedText,
-                                            showCredentials = showCredentials,
-                                            showLoading = showLoading,
-                                            onSuccess = {
-                                                postBoard(board!!,
-                                                    onSuccess = {
-                                                        user.boards.add(
-                                                            UserBoard(
-                                                                board.id,
-                                                                sysName,
-                                                                true
-                                                            )
-                                                        )
-                                                        updateUser(user = user,
-                                                            onSuccess = {
-                                                                val intent = Intent(
-                                                                    context,
-                                                                    MainScreen::class.java
-                                                                )
-                                                                context.startActivity(intent)
-                                                                clazz.finish()
-                                                            },
-                                                            onFailure = {
-                                                                showLoading.value = false
-                                                            }
-                                                        )
-                                                    },
-                                                    onFailure = { showLoading.value = false })
-                                            },
-                                            onFailure = { showLoading.value = false })
-
-                                    },
-                                    modifier = Modifier.size(200.dp, 50.dp),
-                                    enabled = wifiPWD.value.isNotEmpty() && wifiSSID.value.isNotEmpty() && name.value.isNotEmpty()
-                                            && device.value != null && board.duration != null && board.hourToStart != null,
-                                    colors = ButtonDefaults.buttonColors(
-                                        contentColor = Color.White,
-                                        containerColor = darkGreen,
-                                        disabledContentColor = Color.Black,
-                                        disabledContainerColor = Color.LightGray
-                                    ),
+                            createTile("Submit")
+                            Row(
+                                Modifier
+                                    .offset(0.dp, 20.dp)
+                            ) {
+                                Column(
+                                    Modifier
+                                        .background(mintGreen)
+                                        .offset(0.dp, 30.dp)
                                 ) {
-                                    Text(
-                                        fontSize = 22.sp,
-                                        text = "Add System"
-                                    )
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.Center,
+                                        modifier = Modifier.padding(16.dp).fillMaxWidth()
+                                    )  {
+                                        if (board != null && (changed.value || !changed.value)) {
+                                            Button(
+                                                onClick = {
+
+                                                    showLoading.value = true
+
+                                                    connectWifi(
+                                                        device = device,
+                                                        btnBlock = btnBlock,
+                                                        context = context,
+                                                        credId = credId,
+                                                        credPwd = credPwd,
+                                                        wifiSSID = wifiSSID,
+                                                        wifiPWD = wifiPWD,
+                                                        feedText = feedText,
+                                                        showCredentials = showCredentials,
+                                                        showLoading = showLoading,
+                                                        onSuccess = {
+                                                            board.password = credPwd.value
+                                                            postBoard(board,
+                                                                onSuccess = {
+                                                                    user.boards.add(
+                                                                        UserBoard(
+                                                                            board.id,
+                                                                            sysName,
+                                                                            true
+                                                                        )
+                                                                    )
+                                                                    updateUser(user = user,
+                                                                        onSuccess = {
+                                                                            val intent = Intent(
+                                                                                context,
+                                                                                MainScreen::class.java
+                                                                            )
+                                                                            context.startActivity(
+                                                                                intent
+                                                                            )
+                                                                            clazz.finish()
+                                                                        },
+                                                                        onFailure = {
+                                                                            showLoading.value =
+                                                                                false
+                                                                        }
+                                                                    )
+                                                                },
+                                                                onFailure = {
+                                                                    showLoading.value = false
+                                                                })
+                                                        },
+                                                        onFailure = { showLoading.value = false })
+
+                                                },
+                                                modifier = Modifier.size(200.dp, 50.dp),
+                                                enabled = wifiPWD.value.isNotEmpty() && wifiSSID.value.isNotEmpty() && name.value.isNotEmpty()
+                                                        && device.value != null && board.duration != null && board.hourToStart != null,
+                                                colors = ButtonDefaults.buttonColors(
+                                                    contentColor = Color.White,
+                                                    containerColor = darkGreen,
+                                                    disabledContentColor = Color.Black,
+                                                    disabledContainerColor = Color.LightGray
+                                                ),
+                                                shape = RoundedCornerShape(15.dp)
+                                            ) {
+                                                Text(
+                                                    fontSize = 22.sp,
+                                                    text = "Add System"
+                                                )
+                                            }
+                                        }
+
+                                    }
+                                    Spacer(modifier = Modifier.size(0.dp, 40.dp))
                                 }
                             }
 
-                        }
-                        Spacer(modifier = Modifier.size(0.dp, 10.dp))
-                    }
 
+                        }
+                        Spacer(modifier = Modifier.size(0.dp, 40.dp))
+
+                    }
                 }
-            }
-            }
-        }
 
+                Spacer(modifier = Modifier.size(0.dp, 170.dp))
+            }
+
+        }
     }
 
-    @SuppressLint("MissingPermission")
-    private fun connectWifi(
-        device: MutableState<BluetoothDevice?>,
-        btnBlock: MutableState<Boolean>,
-        context: Context,
-        credId: MutableState<String>,
-        credPwd: MutableState<String>,
-        wifiSSID: MutableState<String>,
-        wifiPWD: MutableState<String>,
-        feedText: MutableState<Pair<String, Color>?>,
-        showCredentials: MutableState<Boolean>,
-        showLoading: MutableState<Boolean>,
-        onSuccess: () -> Unit,
-        onFailure: () -> Unit
-    ) {
-        device.value?.let {
-            btnBlock.value = true
-            it.connectGatt(
-                context,
-                false,
-                BLEGattCallback(sendMessage = {
-                    "wifi\t${credId.value}\t${credPwd.value}\t" + Gson().toJson(
-                        WIFICred(
-                            wifiSSID.value,
-                            wifiPWD.value
-                        )
-                    ) + "\n"
-                }, onResponse = { response ->
-                    btnBlock.value = false
-                    Log.w("PT-irineu", "Data received: $response")
+}
 
-                    when (response) {
-                        0 -> {
-                            feedText.value = Pair("Device connected successfully", darkGreen)
-                            onSuccess()
-                            return@BLEGattCallback
-                        }
+@SuppressLint("MissingPermission")
+private fun connectWifi(
+    device: MutableState<BluetoothDevice?>,
+    btnBlock: MutableState<Boolean>,
+    context: Context,
+    credId: MutableState<String>,
+    credPwd: MutableState<String>,
+    wifiSSID: MutableState<String>,
+    wifiPWD: MutableState<String>,
+    feedText: MutableState<Pair<String, Color>?>,
+    showCredentials: MutableState<Boolean>,
+    showLoading: MutableState<Boolean>,
+    onSuccess: () -> Unit,
+    onFailure: () -> Unit
+) {
+    device.value?.let {
+        btnBlock.value = true
+        it.connectGatt(
+            context,
+            false,
+            BLEGattCallback(sendMessage = {
+                "wifi\t${credId.value}\t${credPwd.value}\t" + Gson().toJson(
+                    WIFICred(
+                        wifiSSID.value,
+                        wifiPWD.value
+                    )
+                ) + "\n"
+            }, onResponse = { response ->
+                btnBlock.value = false
+                Log.w("PT-irineu", "Data received: $response")
 
-                        1 -> showCredentials.value = true
-                        2 -> feedText.value = Pair("Wrong WIFI credentials!", Color.Red)
-                        else -> feedText.value = Pair("Failed to communicate!", Color.Red)
+                when (response) {
+                    0 -> {
+                        feedText.value = Pair("Device connected successfully", darkGreen)
+                        onSuccess()
+                        return@BLEGattCallback
                     }
 
-                    onFailure()
-                })
-            )
-        }
-    }
+                    1 -> showCredentials.value = true
+                    2 -> feedText.value = Pair("Wrong WIFI credentials!", Color.Red)
+                    else -> feedText.value = Pair("Failed to communicate!", Color.Red)
+                }
 
-    @Composable
-    fun DayButton(
-        day: String,
-        onToggle: () -> Unit,
-        isSelect: Boolean
+                onFailure()
+            })
+        )
+    }
+}
+
+@Composable
+fun DayButton(
+    day: String,
+    onToggle: () -> Unit,
+    isSelect: Boolean
+) {
+    var isSelected by remember { mutableStateOf(isSelect) }
+
+    Button(
+        onClick = {
+            isSelected = !isSelected
+            onToggle()
+        },
+        modifier = Modifier.padding(2.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = if (isSelected) darkGreen else Color.LightGray,
+            contentColor = if (isSelected) Color.White else Color.Black
+        ),
+        shape = CircleShape
     ) {
-        var isSelected by remember { mutableStateOf(isSelect) }
-
-        Button(
-            onClick = {
-                isSelected = !isSelected
-                onToggle()
-            },
-            modifier = Modifier.padding(2.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = if (isSelected) darkGreen else Color.LightGray,
-                contentColor = if (isSelected) Color.White else Color.Black
-            ),
-            shape = CircleShape
-        ) {
-            Text(
-                modifier = Modifier.padding(1.dp),
-                text = day
-            )
-        }
+        Text(
+            modifier = Modifier.padding(1.dp),
+            text = day
+        )
     }
+}
 
-    @Composable
-    fun TextBox(label: String, value: String = "", password: Boolean = false): String {
-        var textValue by remember { mutableStateOf(value) }
+@Composable
+fun TextBox(
+    label: String,
+    value: String = "",
+    password: Boolean = false,
+    enabled: Boolean = true
+): String {
+    var textValue by remember { mutableStateOf(value) }
 
-        OutlinedTextField(
-            visualTransformation = if (password) PasswordVisualTransformation() else VisualTransformation.None,
-            maxLines = 1,
-            value = textValue,
-            onValueChange = { newText -> textValue = newText },
-            label = {
-                Text(
-                    label,
-                    style = TextStyle(fontSize = 15.sp, fontWeight = FontWeight.Bold)
-                )
+    OutlinedTextField(
+        visualTransformation = if (password) PasswordVisualTransformation() else VisualTransformation.None,
+        maxLines = 1,
+        value = textValue,
+        onValueChange = { newText -> textValue = newText },
+        label = { Text(label, style = TextStyle(fontSize = 15.sp, fontWeight = FontWeight.Bold)) },
+        enabled = enabled,
+        colors =
+        TextFieldDefaults.colors(
+            focusedContainerColor = mintGreen,
+            focusedTextColor = Color.Black,
+            focusedPlaceholderColor = darkGreen,
+            focusedIndicatorColor = darkGreen,
+            focusedLabelColor = darkGreen,
+            unfocusedContainerColor = mintGreen,
+            unfocusedTextColor = Color.Black,
+            unfocusedPlaceholderColor = darkGreen,
+            unfocusedIndicatorColor = darkGreen,
+            unfocusedLabelColor = darkGreen,
+
+            disabledContainerColor = mintGreen,
+            disabledTextColor = darkGreen,
+            disabledPlaceholderColor = darkGreen,
+            disabledIndicatorColor = darkGreen,
+            disabledLabelColor = darkGreen,
+        ),
+        textStyle = TextStyle(fontSize = 15.sp, fontWeight = FontWeight.Normal),
+        modifier = Modifier
+            .padding(horizontal = 16.dp)
+            .fillMaxWidth()
+
+    )
+
+    return textValue;
+}
+
+@SuppressLint("MissingPermission")
+@Composable
+fun BlueDropdown(
+    label: String,
+    options: List<BluetoothDevice>,
+    onClick: () -> Unit
+): BluetoothDevice? {
+
+    var expanded by remember { mutableStateOf(false) }
+    var selectedOption by remember { mutableStateOf<BluetoothDevice?>(null) }
+    Text(text = label)
+    Box(
+        modifier = Modifier
+            .wrapContentSize(Alignment.TopEnd)
+    ) {
+        ElevatedButton(
+            onClick = {
+                onClick()
+                expanded = true
             },
-            colors =
-            TextFieldDefaults.colors(
-                focusedContainerColor = mintGreen,
-                focusedTextColor = Color.Black,
-                focusedPlaceholderColor = darkGreen,
-                focusedIndicatorColor = darkGreen,
-                focusedLabelColor = darkGreen,
-                unfocusedContainerColor = mintGreen,
-                unfocusedTextColor = Color.Black,
-                unfocusedPlaceholderColor = darkGreen,
-                unfocusedIndicatorColor = darkGreen,
-                unfocusedLabelColor = darkGreen,
+            colors = ButtonDefaults.buttonColors(
+                contentColor = if (selectedOption == null) Color.Black else Color.White,
+                containerColor = if (selectedOption == null) Color.LightGray else darkGreen,
+                disabledContentColor = Color.Black,
+                disabledContainerColor = Color.LightGray
             ),
-            textStyle = TextStyle(fontSize = 15.sp, fontWeight = FontWeight.Normal),
             modifier = Modifier
-                .padding(horizontal = 16.dp)
-                .fillMaxWidth()
+                .height(50.dp)
+                .fillMaxWidth(),
+            shape = RoundedCornerShape(15.dp)
 
         )
-
-        return textValue;
-    }
-
-    @SuppressLint("MissingPermission")
-    @Composable
-    fun BlueDropdown(
-        label: String,
-        options: List<BluetoothDevice>,
-        onClick: () -> Unit
-    ): BluetoothDevice? {
-
-        var expanded by remember { mutableStateOf(false) }
-        var selectedOption by remember { mutableStateOf<BluetoothDevice?>(null) }
-        Text(text = label)
-        Box(
-            modifier = Modifier
-                .wrapContentSize(Alignment.TopEnd)
-        ) {
-            ElevatedButton(
-                onClick = {
-                    onClick()
-                    expanded = true
-                },
-                colors = ButtonDefaults.buttonColors(
-                    contentColor = if (selectedOption == null) Color.Black else Color.White,
-                    containerColor = if (selectedOption == null) Color.LightGray else darkGreen,
-                    disabledContentColor = Color.Black,
-                    disabledContainerColor = Color.LightGray
-                ),
-                modifier = Modifier
-                    .height(50.dp)
-                    .fillMaxWidth(),
-                shape = RoundedCornerShape(15.dp)
-
-            )
-            {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(
-                        Icons.Filled.ArrowDropDown,
-                        contentDescription = "",
-                        modifier = Modifier.size(20.dp),
-                        tint = if (selectedOption == null) Color.Black else Color.White
-
-                    )
-
-                    if (selectedOption != null)
-                        Text(
-                            text = selectedOption!!.name,
-                            modifier = Modifier.padding(10.dp, 0.dp, 0.dp, 0.dp)
-                        )
-                    else
-                        Text(
-                            text = "Select device",
-                            modifier = Modifier.padding(10.dp, 0.dp, 0.dp, 0.dp)
-                        )
-                }
-            }
-
-            DropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false },
-                modifier = Modifier.height(Math.min(55 * options.size + 1, 200).dp)
-
+        {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
             ) {
-                options.forEach { option ->
-                    DropdownMenuItem(
-                        text = { Text(option.name) },
-                        onClick = {
-                            selectedOption = option
-                            expanded = false
-                        }
-                    )
-                }
-            }
-        }
-        return selectedOption
-    }
+                Icon(
+                    Icons.Filled.ArrowDropDown,
+                    contentDescription = "",
+                    modifier = Modifier.size(20.dp),
+                    tint = if (selectedOption == null) Color.Black else Color.White
 
-    @Composable
-    fun Dropdown(label: String, options: List<String>, initialValue: String?): Int? {
-
-        var expanded by remember { mutableStateOf(false) }
-        var selectedOption by remember { mutableStateOf(initialValue) }
-        Text(text = label)
-        Box(
-            modifier = Modifier
-                .wrapContentSize(Alignment.TopEnd)
-        ) {
-            ElevatedButton(
-                onClick = { expanded = true },
-                colors = ButtonDefaults.buttonColors(
-                    contentColor = if (initialValue == null) Color.Black else Color.White,
-                    containerColor = if (initialValue == null) Color.LightGray else darkGreen,
-                    disabledContentColor = Color.Black,
-                    disabledContainerColor = Color.LightGray
                 )
-            )
-            {
-                (if (selectedOption == null) "-" else selectedOption)?.let { Text(text = it) }
-            }
 
-            DropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false },
-                modifier = Modifier.height(200.dp)
-
-            ) {
-                options.forEach { option ->
-                    DropdownMenuItem(
-                        text = { Text(option) },
-                        onClick = {
-                            selectedOption = option
-                            expanded = false
-                        }
+                if (selectedOption != null)
+                    Text(
+                        text = selectedOption!!.name,
+                        modifier = Modifier.padding(10.dp, 0.dp, 0.dp, 0.dp)
                     )
-                }
+                else
+                    Text(
+                        text = "Select device",
+                        modifier = Modifier.padding(10.dp, 0.dp, 0.dp, 0.dp)
+                    )
             }
         }
 
-        try {
-            return selectedOption!!.toInt()
-        } catch (e: Exception) {
-            return null
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            modifier = Modifier.height(Math.min(55 * options.size + 1, 200).dp)
+
+        ) {
+            options.forEach { option ->
+                DropdownMenuItem(
+                    text = { Text(option.name) },
+                    onClick = {
+                        selectedOption = option
+                        expanded = false
+                    }
+                )
+            }
         }
     }
+    return selectedOption
+}
+
+@Composable
+fun Dropdown(label: String, options: List<String>, initialValue: String?): Int? {
+
+    var expanded by remember { mutableStateOf(false) }
+    var selectedOption by remember { mutableStateOf(initialValue) }
+    Text(text = label)
+    Box(
+        modifier = Modifier
+            .wrapContentSize(Alignment.TopEnd)
+    ) {
+        ElevatedButton(
+            onClick = { expanded = true },
+            colors = ButtonDefaults.buttonColors(
+                contentColor = if (initialValue == null) Color.Black else Color.White,
+                containerColor = if (initialValue == null) Color.LightGray else darkGreen,
+                disabledContentColor = Color.Black,
+                disabledContainerColor = Color.LightGray
+            )
+        )
+        {
+            (if (selectedOption == null) "-" else selectedOption)?.let { Text(text = it) }
+        }
+
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            modifier = Modifier.height(200.dp)
+
+        ) {
+            options.forEach { option ->
+                DropdownMenuItem(
+                    text = { Text(option) },
+                    onClick = {
+                        selectedOption = option
+                        expanded = false
+                    }
+                )
+            }
+        }
+    }
+
+    try {
+        return selectedOption!!.toInt()
+    } catch (e: Exception) {
+        return null
+    }
+}

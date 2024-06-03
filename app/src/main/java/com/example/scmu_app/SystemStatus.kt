@@ -11,62 +11,61 @@ import androidx.activity.enableEdgeToEdge
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.ArrowDropUp
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Thermostat
+import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material.icons.filled.TimerOff
+import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import com.example.scmu_app.others.Board
 import com.example.scmu_app.others.BoardInfo
 import com.example.scmu_app.others.Event
-import com.example.scmu_app.ui.theme.SCMUAppTheme
-import com.example.scmu_app.ui.theme.createTile
+import com.example.scmu_app.others.StateNotificationService
+import com.example.scmu_app.others.User
 import com.example.scmu_app.others.dateToStandardFormat
 import com.example.scmu_app.others.fetchBoardInfo
+import com.example.scmu_app.others.formatDuration
 import com.example.scmu_app.others.getDateTime
+import com.example.scmu_app.others.updateBoard
 import com.example.scmu_app.ui.theme.CreateDefaultScaffold
+import com.example.scmu_app.ui.theme.SCMUAppTheme
+import com.example.scmu_app.ui.theme.bgGreen
+import com.example.scmu_app.ui.theme.createTile
+import com.example.scmu_app.ui.theme.darkGreen
+import com.example.scmu_app.ui.theme.darkRed
 import com.example.scmu_app.ui.theme.mintGreen
 import com.example.scmu_app.ui.theme.swampGreen
 import com.example.scmu_app.ui.theme.titleExtraLarge
-import kotlinx.coroutines.delay
-import java.time.format.TextStyle
-import java.util.Locale
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-
-import androidx.compose.runtime.Composable
-
-import androidx.compose.runtime.remember
-import androidx.compose.ui.draw.clip
-import com.example.scmu_app.others.Board
-import com.example.scmu_app.others.StateNotificationService
-import com.example.scmu_app.others.User
-import com.example.scmu_app.others.formatDuration
-import com.example.scmu_app.others.updateBoard
-import com.example.scmu_app.ui.theme.darkGreen
 import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import java.time.format.TextStyle
+import java.util.Locale
 
 
 class SystemStatus : ComponentActivity() {
@@ -96,7 +95,11 @@ class SystemStatus : ComponentActivity() {
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun PreSystemStatusContent(
-    systemName: String, user: User, sysId: String, notiSystem: StateNotificationService, clazz : SystemStatus
+    systemName: String,
+    user: User,
+    sysId: String,
+    notiSystem: StateNotificationService,
+    clazz: SystemStatus
 ) {
 
     val showLoading = remember { mutableStateOf(true) }
@@ -110,39 +113,36 @@ fun PreSystemStatusContent(
 
         val job = scope.launch {
             while (isActive) {
-                if (System.currentTimeMillis() - currentDate.value > 1000) {
 
-                    currentDate.value = System.currentTimeMillis()
-                    fetchBoardInfo(sysId, onFailure = {}, onSuccess = { board ->
-                        showLoading.value = false
-                        boardInfo.value = board
+                fetchBoardInfo(sysId, onFailure = {}, onSuccess = { board ->
+                    showLoading.value = false
+                    boardInfo.value = board
 
-                        board.board.lastFetch = System.currentTimeMillis()
-                        val userBoard = user.boards.find { it.board == sysId }!!
+                    board.board.lastFetch = System.currentTimeMillis()
+                    val userBoard = user.boards.find { it.board == sysId }!!
 
 
-                        Log.w("Notification", userBoard.notifications.toString())
+                    Log.w("Notification", userBoard.notifications.toString())
 
-                        if (board.board.isOnline() && userBoard.notifications)
-                            if (state.value != board.board.currentState) {
+                    if (board.board.isOnline() && userBoard.notifications)
+                        if (state.value != board.board.currentState) {
 
-                                if (state.value == 1 && board.board.currentState == 0) {
-                                    Log.w("Notification", "Notification paused to resume")
-                                    notiSystem.showBasicNotification(3)
-                                } else if (board.board.currentState != 1) {
-                                    Log.w("Notification", "Notification normal")
-                                    notiSystem.showBasicNotification(board.board.currentState)
-                                }
-
-                                state.value = board.board.currentState
+                            if (state.value == 1 && board.board.currentState == 0) {
+                                Log.w("Notification", "Notification paused to resume")
+                                notiSystem.showBasicNotification(3)
+                            } else if (board.board.currentState != 1) {
+                                Log.w("Notification", "Notification normal")
+                                notiSystem.showBasicNotification(board.board.currentState)
                             }
 
-                        if (events.value == null || board.eventsChanged(events.value!!)) {
-                            events.value = board.events
+                            state.value = board.board.currentState
                         }
 
-                    })
-                }
+
+                    if (board.eventsChanged(events.value))
+                        events.value = board.events
+                })
+
 
                 delay(1000)
             }
@@ -171,7 +171,7 @@ fun SystemStatusContent(
     systemName: String,
     user: User,
     sysId: String,
-    events: MutableState<MutableList<Event>?>, clazz : SystemStatus
+    events: MutableState<MutableList<Event>?>, clazz: SystemStatus
 ) {
 
     val context = LocalContext.current
@@ -179,12 +179,13 @@ fun SystemStatusContent(
     Column(
         modifier = Modifier
             .verticalScroll(rememberScrollState())
+            .fillMaxHeight()
             .background(mintGreen)
 
     ) {
 
 
-        BoxWithConstraints {
+        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
             Row(
                 modifier = Modifier
                     .fillMaxSize()
@@ -218,7 +219,7 @@ fun SystemStatusContent(
 
                     modifier = Modifier
                         .background(
-                            color = com.example.scmu_app.ui.theme.darkGreen,
+                            color = darkGreen,
                             shape = RoundedCornerShape(15.dp, 0.dp, 0.dp, 15.dp)
                         )
                         .padding(10.dp, 5.dp)
@@ -237,8 +238,9 @@ fun SystemStatusContent(
                 modifier = Modifier
                     .fillMaxSize()
                     .offset(0.dp, 70.dp)
-                    .height(1175.dp) //TODO
+                    //.height(2175.dp) //TODO
                     .background(swampGreen)
+                    .heightIn(800.dp)
             ) {
                 Column(modifier = Modifier.offset(0.dp, 50.dp)) {
                     BoxWithConstraints {
@@ -299,8 +301,11 @@ fun SystemStatusContent(
                             }
                         }
                     }
+                    Spacer(modifier = Modifier.size(0.dp, 210.dp))
                 }
+
             }
+
         }
     }
 
@@ -318,6 +323,7 @@ private fun ListEvents(events: MutableState<MutableList<Event>?>) {
 }
 
 
+@SuppressLint("DefaultLocale")
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun HistoryItem(item: Event) {
@@ -328,47 +334,192 @@ fun HistoryItem(item: Event) {
     val month = startTime.month.getDisplayName(TextStyle.SHORT, Locale.ENGLISH)
     val time = dateToStandardFormat(startTime) + " - " + dateToStandardFormat(endTime)
 
-    Surface(
-        color = if (hasEvent) swampGreen else Color.LightGray,
+    var isExpanded by remember { mutableStateOf(false) }
+
+    Card(
+        colors = CardDefaults.cardColors(containerColor = if (hasEvent) swampGreen else Color.LightGray),
         modifier = Modifier
             .fillMaxWidth()
-            .padding(10.dp, 3.dp),
+            .padding(10.dp, 3.dp)
+            .clickable {
+                if (hasEvent)
+                    isExpanded = !isExpanded
+            },
         shape = RoundedCornerShape(15.dp)
-
     ) {
+        Column(modifier = Modifier) {
 
-        Row(
-            modifier = Modifier.padding(15.dp)
-        ) {
+            Row(
+                modifier = Modifier.padding(15.dp)
+            ) {
 
-            Column() {
-                Text(
-                    color = if (hasEvent) Color.White else Color.Black,
-                    fontSize = 20.sp,
-                    fontWeight = if (hasEvent) FontWeight.Bold else FontWeight.Normal,
-                    text = "${startTime.dayOfMonth} ${month}",
-                    modifier = Modifier
-                )
+                Column {
+                    Text(
+                        color = if (hasEvent) Color.White else Color.Black,
+                        fontSize = 20.sp,
+                        fontWeight = if (hasEvent) FontWeight.Bold else FontWeight.Normal,
+                        text = "${startTime.dayOfMonth} ${month}",
+                    )
+
+                }
+
+                Column(
+                    horizontalAlignment = Alignment.End,
+                    verticalArrangement = Arrangement.Center,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row {
+                        Text(
+                            color = if (hasEvent) Color.White else Color.Black,
+                            fontSize = 16.sp,
+                            text = if (hasEvent) time else item.getStates(),
+                            modifier = Modifier.padding(top = 3.dp)
+                        )
+
+                        if (hasEvent)
+                            Icon(
+                                if (!isExpanded) Icons.Filled.ArrowDropDown else Icons.Filled.ArrowDropUp,
+                                contentDescription = "",
+                                modifier = Modifier.size(30.dp),
+                                tint = Color.White
+                            )
+                    }
+                }
 
             }
 
-            Column(
-                horizontalAlignment = Alignment.End,
-                verticalArrangement = Arrangement.Center,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    color = if (hasEvent) Color.White else Color.Black,
-                    fontSize = 16.sp,
-                    text = if (hasEvent) time else item.getStates(),
+            if (isExpanded && hasEvent) {
+                Column(
                     modifier = Modifier
-                )
+                        .background(bgGreen)
+                        .padding(15.dp)
+                ) {
+
+                    Column {
+                        Row() {
+                            Text(
+                                "Timeline:",
+                                color = Color.Black,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp
+                            )
+
+                            Row(
+                                horizontalArrangement = Arrangement.End,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Thermostat,
+                                    contentDescription = "Temp",
+                                    modifier = Modifier.size(14.dp),
+                                    tint = Color.Black,
+                                )
+                                Text(
+                                    text = String.format("%.1fCº", item.avgTemp),
+                                    color = Color.Black,
+                                    style = androidx.compose.ui.text.TextStyle(
+                                        fontSize = 14.sp,
+                                        color = Color.Black,
+                                        fontWeight = FontWeight.Bold
+                                    ),
+                                    modifier = Modifier.padding(bottom = 8.dp)
+                                )
+
+                                Icon(
+                                    imageVector = Icons.Default.WaterDrop,
+                                    contentDescription = "Hum",
+                                    modifier = Modifier.size(14.dp),
+                                    tint = Color.Black,
+                                )
+                                Text(
+                                    text = String.format("%.1f%%", item.avgHum),
+                                    color = Color.Black,
+                                    style = androidx.compose.ui.text.TextStyle(
+                                        fontSize = 14.sp,
+                                        color = Color.Black,
+                                        fontWeight = FontWeight.Bold
+                                    ),
+                                    modifier = Modifier.padding(bottom = 8.dp)
+                                )
+                            }
+                        }
+
+                        Row {
+
+                            Box(
+                                modifier = Modifier.fillMaxWidth(),
+                            ) {
+                                val total = item.executionTime + item.pausedTime
+                                var current = total.toFloat()
+                                for (e in item.timeLine.reversed()) {
+                                    LinearProgressIndicator(
+                                        trackColor = Color.Transparent,
+                                        color = if (e.state == 0) darkGreen else swampGreen,
+                                        progress = current / total,
+                                        modifier = Modifier
+                                            .padding(4.dp)
+                                            .fillMaxWidth()
+                                            .height(20.dp)
+                                            .background(
+                                                Color.Transparent,
+                                                RoundedCornerShape(50.dp)
+                                            )
+                                            .clip(RoundedCornerShape(50)),
+                                    )
+                                    current -= e.duration
+                                }
+                            }
+                        }
+
+                        Column(modifier = Modifier.padding(20.dp, 0.dp)) {
+
+                            Row {
+                                Icon(
+                                    imageVector = Icons.Default.Timer,
+                                    contentDescription = "Temp",
+                                    modifier = Modifier.size(16.dp),
+                                    tint = Color.Black,
+                                )
+                                Text(
+                                    "Run time: ",
+                                    color = Color.Black,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 15.sp
+                                )
+                                Text(
+                                    formatDuration(item.executionTime.toLong(), true),
+                                    color = Color.Black,
+                                    fontSize = 15.sp
+                                )
+                            }
+
+                            Row {
+                                Icon(
+                                    imageVector = Icons.Default.TimerOff,
+                                    contentDescription = "Temp",
+                                    modifier = Modifier.size(16.dp),
+                                    tint = Color.Black,
+                                )
+                                Text(
+                                    "Paused time: ",
+                                    color = Color.Black,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 15.sp
+                                )
+                                Text(
+                                    formatDuration(item.pausedTime.toLong(), true),
+                                    color = Color.Black,
+                                    fontSize = 15.sp
+                                )
+                            }
+                        }
+                        Column(modifier = Modifier.padding(20.dp, 0.dp)) {
+
+                        }
+                    }
 
 
-                for (e in item.timeLine) {
-                    Text(e.state.toString() + " " + e.duration, color = Color.Black)
                 }
-
             }
 
         }
@@ -379,7 +530,14 @@ fun HistoryItem(item: Event) {
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun InfoItem(boardInfo: BoardInfo, systemName: String, user: User, sysId: String, board: Board, clazz : SystemStatus) {
+fun InfoItem(
+    boardInfo: BoardInfo,
+    systemName: String,
+    user: User,
+    sysId: String,
+    board: Board,
+    clazz: SystemStatus
+) {
     val context = LocalContext.current
 
     Row(
@@ -413,12 +571,48 @@ fun InfoItem(boardInfo: BoardInfo, systemName: String, user: User, sysId: String
                 )
                 Text(
                     text = if (boardInfo.board.isOnline()) "Online" else "Offline",
-                    color = if (boardInfo.board.isOnline()) swampGreen else Color.Red,
+                    color = if (boardInfo.board.isOnline()) swampGreen else darkRed,
                     style = androidx.compose.ui.text.TextStyle(
                         fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.Black
                     ),
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
+
+            }
+
+            if (boardInfo.board.isOnline()) {
+                Row() {
+                    Spacer(modifier = Modifier.size(10.dp))
+                    Icon(
+                        imageVector = Icons.Default.Thermostat,
+                        contentDescription = "Temp",
+                        modifier = Modifier.size(25.dp),
+                        tint = darkGreen,
+                    )
+                    Text(
+                        text = String.format("%.1fCº", board.currentTemp),
+                        color = Color.Black,
+                        style = androidx.compose.ui.text.TextStyle(
+                            fontSize = 14.sp, color = Color.Black, fontWeight = FontWeight.Bold
+                        ),
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+
+                    Icon(
+                        imageVector = Icons.Default.WaterDrop,
+                        contentDescription = "Hum",
+                        modifier = Modifier.size(25.dp),
+                        tint = darkGreen,
+                    )
+                    Text(
+                        text = String.format("%.1f%%", board.currentHum),
+                        color = Color.Black,
+                        style = androidx.compose.ui.text.TextStyle(
+                            fontSize = 14.sp, color = Color.Black, fontWeight = FontWeight.Bold
+                        ),
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                }
             }
 
         }
@@ -462,7 +656,6 @@ fun InfoItem(boardInfo: BoardInfo, systemName: String, user: User, sysId: String
 fun StatusItem(boardInfo: BoardInfo) {
     val showDialog = remember { mutableStateOf(false) }
     val lastTime = remember { mutableStateOf(0F) }
-    val remainingTime = remember { mutableStateOf(0L) }
     val targetValue = remember { mutableStateOf(0F) }
     val lastFetch = remember { mutableStateOf(System.currentTimeMillis()) }
     var shouldShow = boardInfo.board.currentState < 2
@@ -484,25 +677,17 @@ fun StatusItem(boardInfo: BoardInfo) {
                 ),
                 modifier = Modifier
             )
-            DisposableEffect(boardInfo, targetValue) {
-                val scope = CoroutineScope(Dispatchers.Main)
+            LaunchedEffect(boardInfo, targetValue) {
+                while (true) {
+                    if (state.value == -1 && boardInfo.board.currentState != 2)
+                        if (boardInfo.board.currentState == 0) {
+                            val stepSize = (targetValue.value - lastTime.value) / 5F
+                            lastTime.value += stepSize
+                            lastTime.value = lastTime.value.coerceAtMost(targetValue.value)
+                        }
+                    if (boardInfo.board.currentState == 2) state.value = boardInfo.board.state
 
-                val job = scope.launch {
-                    while (isActive) {
-                        if (state.value == -1 && boardInfo.board.currentState != 2)
-                            if (boardInfo.board.currentState == 0) {
-                                val stepSize = (targetValue.value - lastTime.value) / 5F
-                                lastTime.value += stepSize
-                                lastTime.value = lastTime.value.coerceAtMost(targetValue.value)
-                            }
-                        if (boardInfo.board.currentState == 2) state.value = boardInfo.board.state
-
-                        delay(300)
-                    }
-                }
-
-                onDispose {
-                    job.cancel()
+                    delay(500)
                 }
             }
 
@@ -520,7 +705,6 @@ fun StatusItem(boardInfo: BoardInfo) {
                 val percentDone = Math.min(1f, lastTime.value / (teoricExecTime.toFloat()))
 
                 showProgress(percentDone)
-                //shouldShow=boardInfo.board.currentState < 2
             } else lastTime.value = 0F
 
 
