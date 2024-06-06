@@ -105,12 +105,10 @@ fun PreSystemStatusContent(
     val showLoading = remember { mutableStateOf(true) }
     val boardInfo: MutableState<BoardInfo?> = remember { mutableStateOf(null) }
     val events = remember { mutableStateOf<MutableList<Event>?>(null) }
-    val currentDate = remember { mutableStateOf(0L) }
+
     var state = remember { mutableStateOf(2) }
     DisposableEffect(1) {
         val scope = CoroutineScope(Dispatchers.Main)
-
-
         val job = scope.launch {
             while (isActive) {
 
